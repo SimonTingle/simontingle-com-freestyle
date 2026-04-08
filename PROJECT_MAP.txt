@@ -1,0 +1,143 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    PORTFOLIO BLOG WEBSITE - PROJECT MAP                    ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📁 PROJECT STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+portfolio-blog/
+│
+├── 📄 QUICK_START.md              👈 START HERE (5 min read)
+├── 📄 SETUP.md                    Detailed customization guide
+├── 📄 TODO.md                     Checklist of next steps
+├── 📄 BUILD_SUMMARY.md            What's been built
+│
+├── 📁 app/                        Next.js App Directory
+│   ├── page.tsx                   🏠 Home page (full portfolio)
+│   ├── layout.tsx                 Root layout + metadata
+│   ├── globals.css                Global styles
+│   │
+│   └── blog/
+│       ├── page.tsx               📰 Blog listing
+│       └── [slug]/
+│           └── page.tsx           📖 Individual blog posts
+│
+├── 📁 components/                 Reusable React components
+│   ├── Hero3D.tsx                 ✨ Three.js rolling hills
+│   ├── Navigation.tsx             🧭 Top navigation bar
+│   ├── About.tsx                  👋 About section
+│   ├── ProjectCard.tsx            🎴 Single project card
+│   ├── ProjectShowcase.tsx        📊 Projects grid
+│   ├── Contact.tsx                📧 Contact form
+│   └── Footer.tsx                 🔗 Footer
+│
+├── 📁 lib/
+│   └── projects.ts                📌 PROJECT DATA (EDIT THIS!)
+│
+├── 📁 public/
+│   └── projects/                  🖼️ Project images (ADD YOURS HERE)
+│
+├── 📁 node_modules/               Dependencies (ignore)
+│
+├── package.json                   Dependencies list
+├── next.config.ts                 Next.js configuration
+├── tsconfig.json                  TypeScript configuration
+├── tailwind.config.ts             Tailwind CSS config
+└── .gitignore                     Git ignore rules
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 DESIGN FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ Hero Section
+   └─ Three.js interactive rolling hills landscape
+   └─ Animated text overlay (your name + tagline)
+   └─ Scroll indicator animation
+
+📁 Project Showcase
+   └─ Responsive grid (1-3 columns)
+   └─ Project cards with images
+   └─ Tech badges
+   └─ Live demo + GitHub buttons
+   └─ Placeholder cards ready for your projects
+
+📝 Blog System
+   └─ Blog index page (/blog)
+   └─ Individual post pages (/blog/post-name)
+   └─ Tags and reading time
+   └─ Sample posts included
+
+👋 About Section
+   └─ Bio paragraph
+   └─ Tech skills grid
+   └─ Call-to-action buttons
+
+📧 Contact Section
+   └─ Contact form
+   └─ Direct contact methods
+   └─ Social links
+
+🧭 Navigation
+   └─ Fixed header
+   └─ Mobile hamburger menu
+   └─ Responsive design
+
+🎭 Dark Mode
+   └─ Built-in light/dark theme support
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 QUICK CUSTOMIZATION GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WHAT TO UPDATE          FILE                           ACTION
+───────────────────────────────────────────────────────────────────────────
+🔴 Your projects        lib/projects.ts               Edit projects array
+🔴 Project images       public/projects/              Add .png/.webp files
+🟡 About section        components/About.tsx          Update bio & skills
+🟡 Contact info         components/Contact.tsx        Add your email
+🟡 Social links         components/Footer.tsx         Update URLs
+🟢 Blog posts           app/blog/[slug]/page.tsx      Add articles
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 DEPLOYMENT CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Update projects in lib/projects.ts
+□ Add project images to public/projects/
+□ Update About section
+□ Run locally: npm run dev
+□ Push to GitHub
+□ Deploy to Vercel
+□ Configure custom domain
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 TECH STACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Next.js 16.2          - Framework
+✓ React 19.2.4          - UI Library
+✓ TypeScript             - Type Safety
+✓ Three.js              - 3D Graphics
+✓ React Three Fiber     - React + Three.js
+✓ Tailwind CSS 4        - Styling
+✓ Framer Motion         - Animations
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Read QUICK_START.md (5 minutes)
+2. Edit lib/projects.ts with your projects
+3. Add project images to public/projects/
+4. Run: npm run dev
+5. Visit: http://localhost:3000
+6. Push to GitHub
+7. Deploy to Vercel
+8. Add custom domain
+
+═══════════════════════════════════════════════════════════════════════════════

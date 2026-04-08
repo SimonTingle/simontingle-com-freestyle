@@ -11,13 +11,21 @@
   "dependencies": {
     "next": "16.2.2",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "three": "latest",
+    "@react-three/fiber": "^9.0.0",
+    "@react-three/drei": "^9.97.0",
+    "framer-motion": "^11.0.0",
+    "contentlayer": "^0.3.4",
+    "next-contentlayer": "^0.3.4",
+    "rss": "^1.2.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "latest",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",
