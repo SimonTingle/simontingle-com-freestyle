@@ -15,13 +15,16 @@ export default function Home() {
       <div className="relative z-10 min-h-screen">
         <Navigation />
 
-        {/* Hero: transparent space letting the 3D scene + balloons be the focus */}
-        <section className="h-screen flex items-end justify-center pb-24 pointer-events-none">
-          <div className="text-center pointer-events-auto">
-            <h1 className="text-6xl md:text-7xl font-bold text-white mb-4 drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
-              Simon Tingle
+        {/* Hero: transparent space letting the 3D scene + balloons be the focus.
+            Title sits at the top, tagline at the bottom — leaves the center clear for the balloon cluster. */}
+        <section className="h-screen relative pointer-events-none">
+          <div className="absolute top-28 left-0 right-0 text-center">
+            <h1 className="text-6xl md:text-8xl font-bold text-white tracking-wider drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+              SIMON TINGLE
             </h1>
-            <p className="text-xl md:text-2xl text-blue-200 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+          </div>
+          <div className="absolute bottom-20 left-0 right-0 text-center">
+            <p className="text-lg md:text-xl text-orange-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] tracking-wide">
               Building interactive experiences with code
             </p>
           </div>
