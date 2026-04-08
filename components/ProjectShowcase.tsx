@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export function ProjectShowcase() {
   return (
-    <section className="py-20 px-4 md:px-8 lg:px-16 bg-white dark:bg-gray-900">
+    <section className="py-20 px-4 md:px-8 lg:px-16 bg-slate-900/75 backdrop-blur-md border-t border-slate-700/50">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

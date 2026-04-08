@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Plane } from "@react-three/drei";
 import { Mesh, BufferGeometry, BufferAttribute } from "three";
@@ -13,8 +13,8 @@ function RollingHills() {
   const geometry = useMemo(() => {
     const width = 30;
     const height = 30;
-    const widthSegments = 200;
-    const heightSegments = 200;
+    const widthSegments = 60;
+    const heightSegments = 60;
 
     const positions = new Float32Array(
       (widthSegments + 1) * (heightSegments + 1) * 3
@@ -88,6 +88,8 @@ export function Hero3D() {
       <Canvas
         className="absolute inset-0"
         camera={{ position: [0, 8, 15], fov: 50 }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: false }}
       >
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 20, 10]} intensity={1} />
