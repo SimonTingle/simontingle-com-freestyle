@@ -233,7 +233,7 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
 
     // ─── VEGETATION ──────────────────────────────────────────────────────────
     // Bug 4 fix: add trunks, fix worldY formula, match reference density/placement
-    const windShaderInjection = (shader: THREE.Shader) => {
+    const windShaderInjection = (shader: any) => {
       shader.uniforms.uTime = { value: 0 };
       shader.uniforms.uWindSpeed = { value: 1.5 };
       shader.vertexShader = `
@@ -345,10 +345,298 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     firTrunks.instanceMatrix.needsUpdate = true;
     deciduousTrunks.instanceMatrix.needsUpdate = true;
 
+    // ─── BIRDS (BOID SYSTEM) ─────────────────────────────────────────────────
+    const MAX_BIRDS = 5;  // Max 1-5 birds in a single flock
+
+    // Bird geometry — gull silhouette, simple W shape (MUCH LARGER for visibility)
+    function createBirdGeo(): THREE.BufferGeometry {
+      const W = 300; // half-wingspan (5x larger)
+      const positions = new Float32Array([
+        // Left wing tip
+        -W, 40, 0,
+        // Left wing root
+        -30, 0, 25,
+        // Center front
+        0, 0, 125,
+        // Right wing root
+        30, 0, 25,
+        // Right wing tip
+        W, 40, 0,
+        // Center back
+        0, -10, -125,
+      ]);
+
+      // Simple indices for two big triangles (left wing+center, right wing+center, body)
+      const indices = new Uint32Array([
+        // Front left wing
+        0, 1, 2,
+        // Front right wing
+        2, 3, 4,
+        // Back triangle (body)
+        1, 5, 3,
+      ]);
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geo.setIndex(new THREE.BufferAttribute(indices, 1));
+      geo.computeVertexNormals();
+
+      // Wing flutter attribute: 0 for body, 1 for tips
+      const wingFactor = new Float32Array([
+        1, 0.5, 0,  // left wing tip, left root, center
+        0, 1, 0,    // center, right tip, right root (flipped for back)
+      ]);
+      geo.setAttribute("wingFactor", new THREE.BufferAttribute(wingFactor, 1));
+
+      return geo;
+    }
+
+    const birdGeo = createBirdGeo();
+
+    // Bright white birds — always render on top, no depth testing
+    const birdMat = new THREE.MeshBasicMaterial({
+      color: 0xFFFFFF,  // Bright white
+      side: THREE.DoubleSide,
+      wireframe: false,
+      fog: false,  // Don't apply fog to birds
+      depthTest: false,  // Always render on top (no depth culling)
+      depthWrite: false,  // Don't write to depth buffer
+    });
+
+    const birdMesh = new THREE.InstancedMesh(birdGeo, birdMat, MAX_BIRDS);
+    birdMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    birdMesh.count = MAX_BIRDS;
+    birdMesh.renderOrder = 1000;  // Render on top of everything
+    birdMesh.frustumCulled = false;  // Never cull, always render
+    // Hide all initially
+    const zeroMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+    for (let i = 0; i < MAX_BIRDS; i++) birdMesh.setMatrixAt(i, zeroMatrix);
+    birdMesh.instanceMatrix.needsUpdate = true;
+    scene.add(birdMesh);
+
+
+    // ── Boid Class ────────────────────────────────────────────────────────────
+    class Boid {
+      position = new THREE.Vector3();
+      velocity = new THREE.Vector3();
+      acceleration = new THREE.Vector3();
+      neighborhoodRadius = 800;
+      maxSpeed = 30;  // 50% slower (was 60)
+      maxSteerForce = 2.5;  // 50% slower (was 5)
+
+      run(boids: Boid[]) {
+        // Flocking behavior
+        this.separation(boids);
+        this.alignment(boids);
+        this.cohesion(boids);
+        this.move();
+      }
+
+      separation(boids: Boid[]) {
+        const steer = new THREE.Vector3();
+        let count = 0;
+        for (const boid of boids) {
+          const distance = this.position.distanceTo(boid.position);
+          if (distance > 0 && distance < this.neighborhoodRadius) {
+            const diff = new THREE.Vector3().subVectors(this.position, boid.position);
+            diff.normalize();
+            diff.divideScalar(distance);
+            steer.add(diff);
+            count++;
+          }
+        }
+        if (count > 0) steer.divideScalar(count);
+        if (steer.length() > this.maxSteerForce) {
+          steer.normalize().multiplyScalar(this.maxSteerForce);
+        }
+        this.acceleration.add(steer.multiplyScalar(1.5));
+      }
+
+      alignment(boids: Boid[]) {
+        const avg = new THREE.Vector3();
+        let count = 0;
+        for (const boid of boids) {
+          const distance = this.position.distanceTo(boid.position);
+          if (distance > 0 && distance < this.neighborhoodRadius) {
+            avg.add(boid.velocity);
+            count++;
+          }
+        }
+        if (count > 0) {
+          avg.divideScalar(count);
+          if (avg.length() > this.maxSteerForce) {
+            avg.normalize().multiplyScalar(this.maxSteerForce);
+          }
+        }
+        this.acceleration.add(avg.multiplyScalar(1.0));
+      }
+
+      cohesion(boids: Boid[]) {
+        const steer = new THREE.Vector3();
+        const avg = new THREE.Vector3();
+        let count = 0;
+        for (const boid of boids) {
+          const distance = this.position.distanceTo(boid.position);
+          if (distance > 0 && distance < this.neighborhoodRadius) {
+            avg.add(boid.position);
+            count++;
+          }
+        }
+        if (count > 0) {
+          avg.divideScalar(count);
+          steer.subVectors(avg, this.position);
+          if (steer.length() > this.maxSteerForce) {
+            steer.normalize().multiplyScalar(this.maxSteerForce);
+          }
+        }
+        this.acceleration.add(steer.multiplyScalar(1.0));
+      }
+
+      move() {
+        this.velocity.add(this.acceleration);
+        const len = this.velocity.length();
+        if (len > this.maxSpeed) {
+          this.velocity.divideScalar(len / this.maxSpeed);
+        }
+        this.position.add(this.velocity);
+        this.acceleration.multiplyScalar(0);
+      }
+    }
+
+    // ── Flock instance with Boids ──────────────────────────────────────────────
+    interface BoidFlock {
+      boids: Boid[];
+      goal: THREE.Vector3 | null;
+      active: boolean;
+      lifespan: number;
+    }
+
+    let currentFlock: BoidFlock | null = null;
+    let nextFlockSpawn = 3;
+
+    function spawnNewFlock(time: number) {
+      const count = Math.floor(Math.random() * 5) + 1;  // 1-5 birds
+      const boids: Boid[] = [];
+
+      // Start from left or right edge, middle of screen vertically
+      const goRight = Math.random() > 0.5;
+      const edge = WORLD_SIZE * 0.52;
+      const startX = goRight ? -edge : edge;
+      const startZ = (Math.random() - 0.5) * WORLD_SIZE * 0.3;  // Narrower Z range
+      const startY = 2500 + Math.random() * 1000;  // Lower altitude (middle of screen)
+
+      const goalX = goRight ? edge : -edge;
+      const goalZ = (Math.random() - 0.5) * WORLD_SIZE * 0.3;
+      const goalY = 2500 + Math.random() * 1000;  // Lower goal altitude
+
+      for (let i = 0; i < count; i++) {
+        const boid = new Boid();
+        boid.position.set(
+          startX + (Math.random() - 0.5) * 200,
+          startY + (Math.random() - 0.5) * 200,
+          startZ + (Math.random() - 0.5) * 200
+        );
+        boid.velocity.set(
+          (Math.random() - 0.5) * 25,  // 50% slower (was 50, now 25)
+          (Math.random() - 0.5) * 15,  // 50% slower (was 30, now 15)
+          (Math.random() - 0.5) * 25   // 50% slower (was 50, now 25)
+        );
+        boids.push(boid);
+      }
+
+      currentFlock = {
+        boids,
+        goal: new THREE.Vector3(goalX, goalY, goalZ),
+        active: true,
+        lifespan: 120,  // Stay alive for 2 minutes (plenty of time to cross world)
+      };
+
+      nextFlockSpawn = time + 10 + Math.random() * 15;  // Next flock spawns 10-25 seconds later
+    }
+
+    const birdQ = new THREE.Quaternion();
+    const birdS = new THREE.Vector3(1, 1, 1);
+    const fwdVec = new THREE.Vector3(0, 0, 1);
+    const birdMx = new THREE.Matrix4();
+
+    function updateBirds(time: number, delta: number, windStr: number) {
+      // Spawn new flock if needed
+      if (time >= nextFlockSpawn) {
+        spawnNewFlock(time);
+      }
+
+      if (!currentFlock || !currentFlock.active) {
+        birdMesh.count = 0;
+        return;
+      }
+
+      // Check if birds have flown off-screen
+      let anyVisible = false;
+      for (const boid of currentFlock.boids) {
+        const dist = Math.abs(boid.position.x);
+        if (dist < WORLD_SIZE * 0.6) {
+          anyVisible = true;
+          break;
+        }
+      }
+
+      if (!anyVisible) {
+        currentFlock.active = false;
+        birdMesh.count = 0;
+        return;
+      }
+
+      currentFlock.lifespan -= delta;
+      if (currentFlock.lifespan <= 0) {
+        currentFlock.active = false;
+        birdMesh.count = 0;
+        return;
+      }
+
+      // Update boids
+      for (const boid of currentFlock.boids) {
+        // Gentle steering toward goal (don't snap, let them drift)
+        if (currentFlock.goal) {
+          const toGoal = new THREE.Vector3().subVectors(currentFlock.goal, boid.position);
+          const distance = toGoal.length();
+          if (distance > 500) {
+            toGoal.normalize().multiplyScalar(0.5);  // Very gentle steering
+            boid.acceleration.add(toGoal);
+          }
+        }
+
+        // Apply wind
+        const windForce = new THREE.Vector3(
+          Math.sin(time * windStr * 0.3 + boid.position.x * 0.001) * 20,
+          Math.sin(time * 0.5 + boid.position.y * 0.001) * 10,
+          Math.cos(time * windStr * 0.25 + boid.position.z * 0.001) * 20
+        );
+        boid.acceleration.add(windForce);
+
+        boid.run(currentFlock.boids);
+      }
+
+      // Update instance matrices
+      for (let i = 0; i < currentFlock.boids.length; i++) {
+        const boid = currentFlock.boids[i];
+        const nextPos = new THREE.Vector3().addVectors(boid.position, boid.velocity.clone().multiplyScalar(0.05));
+        const dir = new THREE.Vector3().subVectors(nextPos, boid.position).normalize();
+
+        birdQ.setFromUnitVectors(fwdVec, dir);
+        birdMx.compose(boid.position, birdQ, birdS);  // Use normal scale (1,1,1)
+        birdMesh.setMatrixAt(i, birdMx);
+      }
+
+      birdMesh.count = currentFlock.boids.length;
+      birdMesh.instanceMatrix.needsUpdate = true;
+    }
+
     // ─── ANIMATION LOOP ───────────────────────────────────────────────────────
     let animationId: number;
     const clock = new THREE.Clock();
-    let timeOfDay = config.timeOfDay ?? 6.5;
+    // Use the visitor's local clock — no permission required
+    const now = new Date();
+    let timeOfDay = now.getHours() + now.getMinutes() / 60;
 
     // Bug 5 fix: full day/night cycle with sky + moon matching reference updateCelestialBodies
     function updateCelestialBodies() {
@@ -397,10 +685,17 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       }
     }
 
+    // Debug timers
+    let lastFpsLog = 0;
+    let lastBirdLog = 0;
+    let frameCount = 0;
+
     function animate() {
       animationId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       const time = clock.getElapsedTime();
+
+      frameCount++;
 
       // Auto-advance time of day
       const dayNightSpeed = config.dayNightSpeed ?? 1.0;
@@ -426,6 +721,24 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       if ((deciduousMat as any).userData.shader) {
         (deciduousMat as any).userData.shader.uniforms.uTime.value = time;
         (deciduousMat as any).userData.shader.uniforms.uWindSpeed.value = windStrength;
+      }
+
+      // Update birds
+      updateBirds(time, delta, windStrength);
+
+      // Debug: log birds every 30 seconds
+      if (time - lastBirdLog >= 30) {
+        const birdCount = currentFlock && currentFlock.active ? currentFlock.boids.length : 0;
+        console.log(`🐦 Boid flock: ${birdCount} birds active`);
+        lastBirdLog = time;
+      }
+
+      // Debug: log FPS every 20 seconds
+      if (time - lastFpsLog >= 20) {
+        const fps = Math.round(frameCount / 20);
+        console.log(`📊 FPS: ${fps}`);
+        frameCount = 0;
+        lastFpsLog = time;
       }
 
       renderer.render(scene, camera);
