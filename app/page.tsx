@@ -1,44 +1,51 @@
-import { MountainLakeScene } from "@/components/MountainLakeScene";
+import { ProceduralTerrainScene } from "@/components/ProceduralTerrainScene";
 import { About } from "@/components/About";
 import { ProjectShowcase } from "@/components/ProjectShowcase";
 import { Contact } from "@/components/Contact";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { defaultConfig } from "@/components/SceneConfigPanel";
 
 export default function Home() {
   return (
     <>
-      {/* Fixed full-page 3D background scene */}
-      <MountainLakeScene />
+      {/* Fixed background: Procedural terrain */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <ProceduralTerrainScene config={defaultConfig} />
+      </div>
 
-      {/* Content layer */}
-      <div className="relative z-10 min-h-screen">
+      {/* Content layer: sections float semi-transparently over the scene */}
+      <div className="relative z-10">
         <Navigation />
 
-        {/* Hero: transparent space letting the 3D scene + balloons be the focus.
-            Title sits at the top, tagline at the bottom — leaves the center clear for the balloon cluster. */}
-        <section className="h-screen relative pointer-events-none">
-          <div className="absolute top-28 left-0 right-0 text-center">
+        {/* Hero section (transparent, lets scenes show through) */}
+        <section className="h-screen flex items-center justify-center pointer-events-none">
+          <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-bold text-white tracking-wider drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
               SIMON TINGLE
             </h1>
-          </div>
-          <div className="absolute bottom-20 left-0 right-0 text-center">
-            <p className="text-lg md:text-xl text-orange-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] tracking-wide">
+            <p className="text-lg md:text-xl text-orange-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] tracking-wide mt-4">
               Building interactive experiences with code
             </p>
           </div>
         </section>
 
-        <section id="about">
+        {/* About section (semi-transparent float) */}
+        <section id="about" className="pointer-events-auto">
           <About />
         </section>
-        <section id="projects">
+
+        {/* Projects section (semi-transparent float) */}
+        <section id="projects" className="pointer-events-auto">
           <ProjectShowcase />
         </section>
-        <section id="contact">
+
+        {/* Contact section (semi-transparent float) */}
+        <section id="contact" className="pointer-events-auto">
           <Contact />
         </section>
+
+        {/* Footer */}
         <Footer />
       </div>
     </>

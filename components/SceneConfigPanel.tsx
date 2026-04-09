@@ -16,10 +16,13 @@ export interface SceneConfig {
   sunIntensity: number;
   balloonScale: number;
   balloonSpeed: number;
+  terrainScale: number;
+  treeDensity: number;
+  dayNightSpeed: number;
 }
 
 export const defaultConfig: SceneConfig = {
-  waterHeight: -2,
+  waterHeight: 500,
   waterDeepColor: "#01102a",
   waterShallowColor: "#0a5560",
   rippleStrength: 1,
@@ -28,6 +31,9 @@ export const defaultConfig: SceneConfig = {
   sunIntensity: 3.5,
   balloonScale: 1,
   balloonSpeed: 1,
+  terrainScale: 1,
+  treeDensity: 1,
+  dayNightSpeed: 1,
 };
 
 // ---------------------------------------------------------------------------
@@ -236,6 +242,24 @@ export function SceneConfigPanel({ config, onChange, onReset }: Props) {
                 <Slider label="Float speed" value={config.balloonSpeed}
                   min={0.1} max={3} step={0.05} fmt={(v) => `${v.toFixed(2)}×`}
                   onChange={(v) => onChange({ balloonSpeed: v })}
+                />
+              </div>
+
+              {/* ── TERRAIN ── */}
+              <div className="flex flex-col gap-3 pointer-events-auto">
+                <SectionHeader>🏔️ Terrain</SectionHeader>
+
+                <Slider label="Terrain scale" value={config.terrainScale}
+                  min={0.5} max={2} step={0.05} fmt={(v) => `${v.toFixed(2)}×`}
+                  onChange={(v) => onChange({ terrainScale: v })}
+                />
+                <Slider label="Tree density" value={config.treeDensity}
+                  min={0.3} max={2} step={0.05} fmt={(v) => `${v.toFixed(2)}×`}
+                  onChange={(v) => onChange({ treeDensity: v })}
+                />
+                <Slider label="Day/night speed" value={config.dayNightSpeed}
+                  min={0.1} max={3} step={0.1} fmt={(v) => `${v.toFixed(1)}×`}
+                  onChange={(v) => onChange({ dayNightSpeed: v })}
                 />
               </div>
 
