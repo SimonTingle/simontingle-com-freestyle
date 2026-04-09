@@ -51,7 +51,7 @@ export function About() {
                   Get in Touch
                 </a>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/SimonTingle"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold rounded-lg transition-colors"
