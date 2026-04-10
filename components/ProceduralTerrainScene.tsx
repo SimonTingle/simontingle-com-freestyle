@@ -42,18 +42,17 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     if (!containerRef.current) return;
 
     // ─── RENDERER ────────────────────────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({ antialias: config.antialias ?? true, powerPreference: "high-performance" });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = config.shadowsEnabled ?? true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     containerRef.current.appendChild(renderer.domElement);
 
     // ─── SCENE ───────────────────────────────────────────────────────────────
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
-    // Bug 6 fix: FogExp2 matching reference
-    scene.fog = new THREE.FogExp2(0x87ceeb, 0.00008);
+    scene.fog = new THREE.FogExp2(0x87ceeb, config.fogDensity ?? 0.00008);
 
     // ─── CAMERA ──────────────────────────────────────────────────────────────
     // Bug 6 fix: camera position matching reference [0, 3000, 5000], near=10, far=50000
@@ -67,12 +66,12 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     scene.add(ambientLight);
 
     const sunLight = new THREE.DirectionalLight(0xffffff, config.sunIntensity ?? 2.5);
-    sunLight.castShadow = true;
+    sunLight.castShadow = config.shadowsEnabled ?? true;
     configureShadowLight(sunLight);
     scene.add(sunLight);
 
-    const moonLight = new THREE.DirectionalLight(0x6666ff, 0.8);
-    moonLight.castShadow = true;
+    const moonLight = new THREE.DirectionalLight(0x6666ff, config.moonIntensity ?? 0.8);
+    moonLight.castShadow = config.shadowsEnabled ?? true;
     configureShadowLight(moonLight);
     scene.add(moonLight);
 
@@ -119,42 +118,82 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     heightTexture.magFilter = THREE.LinearFilter;
     heightTexture.needsUpdate = true;
 
-    // ─── TERRAIN GEOMETRY ────────────────────────────────────────────────────
-    const geometry = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, WORLD_WIDTH - 1, WORLD_DEPTH - 1);
-    geometry.rotateX(-Math.PI / 2);
-
-    const vertices = geometry.attributes.position.array as Float32Array;
-    // Bug 1 fix: raw heightData[i] * elevationScale (NOT divided by 255)
+    // ─── TERRAIN GEOMETRY (LOD STRIPS) ──────────────────────────────────────
     const elevationScale = ELEVATION_SCALE * (config.terrainScale ?? 1);
-    for (let i = 0, j = 0; i < heightData.length; i++, j += 3) {
-      vertices[j + 1] = heightData[i] * elevationScale;
-    }
-    geometry.computeVertexNormals();
 
-    // Bug 3 fix: flatShading: true + correct colour 0x558833
+    // Bilinearly sample heightData at any world (X, Z) position.
+    // Because all LOD strips call this with the exact boundary Z value, adjacent
+    // strips produce identical heights at their shared edge → zero cracks.
+    function sampleHeight(worldX: number, worldZ: number): number {
+      const u = ((worldX / WORLD_SIZE) + 0.5) * (WORLD_WIDTH - 1);
+      const v = ((worldZ / WORLD_SIZE) + 0.5) * (WORLD_DEPTH - 1);
+      const u0 = Math.max(0, Math.min(WORLD_WIDTH - 2, Math.floor(u)));
+      const v0 = Math.max(0, Math.min(WORLD_DEPTH - 2, Math.floor(v)));
+      const fu = u - u0, fv = v - v0;
+      const h00 = heightData[v0 * WORLD_WIDTH + u0];
+      const h10 = heightData[v0 * WORLD_WIDTH + (u0 + 1)];
+      const h01 = heightData[(v0 + 1) * WORLD_WIDTH + u0];
+      const h11 = heightData[(v0 + 1) * WORLD_WIDTH + (u0 + 1)];
+      return ((h00 * (1 - fu) + h10 * fu) * (1 - fv) + (h01 * (1 - fu) + h11 * fu) * fv) * elevationScale;
+    }
+
     const terrainMaterial = new THREE.MeshStandardMaterial({
-      color: 0x558833,
-      roughness: 0.9,
+      color: new THREE.Color(config.terrainColor ?? "#558833"),
+      roughness: config.terrainRoughness ?? 0.9,
       metalness: 0.1,
       flatShading: true,
     });
 
-    const mesh = new THREE.Mesh(geometry, terrainMaterial);
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
-    scene.add(mesh);
+    // Build one Z-strip of terrain. All strips share xSegs=256 so their X-axis
+    // vertex positions align at every boundary — this is what prevents seams.
+    // Only zSegs varies: high near camera, low in the fog-shrouded background.
+    function createTerrainStrip(zMin: number, zMax: number, xSegs: number, zSegs: number): THREE.Mesh {
+      const depth = zMax - zMin;
+      const centerZ = (zMin + zMax) / 2;
+      const geo = new THREE.PlaneGeometry(WORLD_SIZE, depth, xSegs, zSegs);
+      geo.rotateX(-Math.PI / 2);
+      const pos = geo.attributes.position.array as Float32Array;
+      for (let i = 0; i < pos.length; i += 3) {
+        const worldX = pos[i];
+        const worldZ = pos[i + 2] + centerZ;   // shift from local to world Z
+        pos[i + 2] = worldZ;
+        pos[i + 1] = sampleHeight(worldX, worldZ);
+      }
+      geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, terrainMaterial);
+      m.receiveShadow = true;
+      m.castShadow = true;
+      scene.add(m);
+      return m;
+    }
+
+    // LOD quality presets: [near zSegs, mid zSegs, far zSegs]
+    // X segments fixed at 256 across all presets so strip X-edges align (no cracks).
+    const lodPresets = {
+      low:    [64,  24,  8],
+      medium: [128, 48, 12],
+      high:   [256, 80, 20],
+    };
+    const [nearZ, midZ, farZ] = lodPresets[config.lodQuality ?? "high"];
+
+    const terrainMeshes = [
+      createTerrainStrip(0,       18000, 256, nearZ),
+      createTerrainStrip(-12000,      0, 256, midZ),
+      createTerrainStrip(-20000, -12000, 256, farZ),
+    ];
 
     // ─── WATER ───────────────────────────────────────────────────────────────
     // Bug 2 fix: proper THREE.ShaderMaterial copied from reference
     const waterLevel = config.waterHeight ?? WATER_LEVEL;
-    const waterGeometry = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, WORLD_WIDTH - 1, WORLD_DEPTH - 1);
+    // Water is a flat procedural surface — 128×128 segments is plenty for wave resolution.
+    const waterGeometry = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 127, 127);
     waterGeometry.rotateX(-Math.PI / 2);
 
     const waterMaterial = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uWaterLevel: { value: waterLevel },
-        uWaveHeight: { value: 15.0 },
+        uWaveHeight: { value: config.waveHeight ?? 15.0 },
         uWaterHaze: { value: 1500.0 },
         uElevationScale: { value: elevationScale },
         uHeightTexture: { value: heightTexture },
@@ -313,22 +352,38 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     const dummy = new THREE.Object3D();
     let firIdx = 0, decIdx = 0, firTrunkIdx = 0, decTrunkIdx = 0;
 
+    const TREE_CULL_DIST_SQ = 20000 * 20000;
+    const treeScale = config.treeScale ?? 1;
+    const treeLine = config.treeLine ?? TREE_LINE;
+    const firPct = (config.firPercentage ?? 50) / 100;  // 0-1
+    const showFir = config.showFirTrees ?? true;
+    const showDec = config.showDeciduousTrees ?? true;
+    const showTrunks = config.showTrunks ?? true;
+
     for (const t of treeData) {
       const worldY = t.h * elevationScale;
       if (worldY < waterLevel + SHORE_BUFFER) continue;
 
-      const isFir = worldY > TREE_LINE;
+      const dx = t.x, dy = worldY - 8000, dz = t.z - 12000;
+      if (dx * dx + dy * dy + dz * dz > TREE_CULL_DIST_SQ) continue;
+
+      // Trees above tree line are always fir; below tree line, use firPercentage
+      const isFir = worldY > treeLine ? true : Math.random() < firPct;
+      if (isFir && !showFir) continue;
+      if (!isFir && !showDec) continue;
+
+      const scale = t.scale * treeScale;
       dummy.position.set(t.x, worldY, t.z);
       dummy.rotation.set(0, t.rotation, 0);
-      dummy.scale.set(t.scale, t.scale, t.scale);
+      dummy.scale.set(scale, scale, scale);
       dummy.updateMatrix();
 
       if (isFir) {
         if (firIdx < MAX_TREES) firTrees.setMatrixAt(firIdx++, dummy.matrix);
-        if (firTrunkIdx < MAX_TREES) firTrunks.setMatrixAt(firTrunkIdx++, dummy.matrix);
+        if (showTrunks && firTrunkIdx < MAX_TREES) firTrunks.setMatrixAt(firTrunkIdx++, dummy.matrix);
       } else {
         if (decIdx < MAX_TREES) deciduousTrees.setMatrixAt(decIdx++, dummy.matrix);
-        if (decTrunkIdx < MAX_TREES) deciduousTrunks.setMatrixAt(decTrunkIdx++, dummy.matrix);
+        if (showTrunks && decTrunkIdx < MAX_TREES) deciduousTrunks.setMatrixAt(decTrunkIdx++, dummy.matrix);
       }
     }
 
@@ -552,12 +607,14 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
 
     function spawnNewFlock(time: number) {
       if (flocks.length >= MAX_FLOCKS) {
-        nextFlockSpawn = time + 4 + Math.random() * 6;
+        const interval = config.birdSpawnInterval ?? 10;
+        nextFlockSpawn = time + interval * 0.4 + Math.random() * interval * 0.3;
         return;
       }
 
-      const count = Math.floor(Math.random() * 4) + 2;  // 2-5 birds per flock
+      const flockSize = Math.max(1, Math.round(config.birdFlockSize ?? 3));
       const boids: Boid[] = [];
+      const speedMult = config.birdSpeed ?? 1;
 
       const goRight = Math.random() > 0.5;
       const direction: 1 | -1 = goRight ? 1 : -1;
@@ -569,21 +626,18 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       const goalZ = startZ + (Math.random() - 0.5) * 2000;
       const goalY = startY + (Math.random() - 0.5) * 500;
 
-      // Spread birds in a V/wedge formation — stagger along travel axis and
-      // fan out on the Z axis so each bird is clearly visible as a separate silhouette.
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < flockSize; i++) {
         const boid = new Boid();
-        // Leader at front, others stagger back along X and spread on Z.
-        // Spacing chosen so birds are well separated at their ~600-unit wingspan.
-        const rank = i;  // 0 = leader
+        boid.maxSpeed = 45 * speedMult;
+        const rank = i;
         const side = (i % 2 === 0 ? 1 : -1) * Math.ceil(i / 2);
         boid.position.set(
-          startX - direction * rank * 1200,     // each bird 1200 units behind the last
+          startX - direction * rank * 1200,
           startY + (Math.random() - 0.5) * 200,
-          startZ + side * 1400                  // fan out 1400 units per slot
+          startZ + side * 1400
         );
         boid.velocity.set(
-          direction * 35,
+          direction * 35 * speedMult,
           (Math.random() - 0.5) * 1.5,
           (Math.random() - 0.5) * 1.5
         );
@@ -599,11 +653,13 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
         spawnTime: time,
       });
 
-      nextFlockSpawn = time + 8 + Math.random() * 7;  // Next flock 8–15s later
+      const interval = config.birdSpawnInterval ?? 10;
+      nextFlockSpawn = time + interval * 0.7 + Math.random() * interval * 0.6;
     }
 
     const birdQ = new THREE.Quaternion();
-    const birdS = new THREE.Vector3(1, 1, 1);
+    const birdScaleVal = config.birdScale ?? 1;
+    const birdS = new THREE.Vector3(birdScaleVal, birdScaleVal, birdScaleVal);
     const fwdVec = new THREE.Vector3(0, 0, 1);
     const birdMx = new THREE.Matrix4();
 
@@ -612,6 +668,10 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     const dirVec = new THREE.Vector3();
 
     function updateBirds(time: number, delta: number, windStr: number) {
+      if (!(config.birdEnabled ?? true)) {
+        birdMesh.count = 0;
+        return;
+      }
       // Spawn a new flock whenever the timer elapses (respects MAX_FLOCKS inside).
       if (time >= nextFlockSpawn) {
         spawnNewFlock(time);
@@ -709,7 +769,7 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       const moonFactor = THREE.MathUtils.smoothstep(normMoonY, -0.25, 0.1);
 
       sunLight.intensity = sunFactor * (config.sunIntensity ?? 2.5);
-      moonLight.intensity = moonFactor * 0.8;
+      moonLight.intensity = moonFactor * (config.moonIntensity ?? 0.8);
 
       const dayColor = new THREE.Color(0x87ceeb);
       const nightColor = new THREE.Color(0x020210);
@@ -724,6 +784,7 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       }
 
       (scene.fog as THREE.FogExp2).color.copy(scene.background as THREE.Color);
+      (scene.fog as THREE.FogExp2).density = config.fogDensity ?? 0.00008;
 
       const ambientIntensity = 0.05 + 0.45 * dayMix + 0.1 * moonFactor;
       ambientLight.intensity = ambientIntensity;
@@ -749,16 +810,21 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
 
       frameCount++;
 
-      // Auto-advance time of day
-      const dayNightSpeed = config.dayNightSpeed ?? 1.0;
-      timeOfDay += (delta * 2.0 * dayNightSpeed) / 3600;
-      if (timeOfDay >= 24) timeOfDay -= 24;
+      // Time of day: manual override or auto-advance
+      if (config.manualTimeEnabled) {
+        timeOfDay = config.manualTimeHour ?? 12;
+      } else {
+        const dayNightSpeed = config.dayNightSpeed ?? 1.0;
+        timeOfDay += (delta * 2.0 * dayNightSpeed) / 3600;
+        if (timeOfDay >= 24) timeOfDay -= 24;
+      }
 
       updateCelestialBodies();
 
       // Update water uniforms
       waterMaterial.uniforms.uTime.value = time;
       waterMaterial.uniforms.uWaterLevel.value = config.waterHeight ?? WATER_LEVEL;
+      waterMaterial.uniforms.uWaveHeight.value = config.waveHeight ?? 15;
       waterMaterial.uniforms.uCameraPosition.value = camera.position;
       waterMaterial.uniforms.uHazeColor.value = scene.background;
 
