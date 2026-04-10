@@ -750,6 +750,16 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     const now = new Date();
     let timeOfDay = now.getHours() + now.getMinutes() / 60;
 
+    // Sky presets: each defines day/night/sunset colours
+    const skyPresets: Record<string, { day: number; night: number; sunset: number }> = {
+      sunset:    { day: 0x87ceeb, night: 0x020210, sunset: 0xff4500 },
+      dawn:      { day: 0xffe5b4, night: 0x1a0f1a, sunset: 0xff9933 },
+      noon:      { day: 0x00bfff, night: 0x0a0a1a, sunset: 0xffcc00 },
+      night:     { day: 0x1a2a4a, night: 0x000000, sunset: 0x1a0a2a },
+      overcast:  { day: 0xb0c4de, night: 0x2f3a4a, sunset: 0x9966aa },
+      storm:     { day: 0x4a5f7f, night: 0x0a0a1a, sunset: 0x663344 },
+    };
+
     // Bug 5 fix: full day/night cycle with sky + moon matching reference updateCelestialBodies
     function updateCelestialBodies() {
       const theta = (timeOfDay / 24) * Math.PI * 2 - Math.PI / 2;
@@ -771,9 +781,11 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       sunLight.intensity = sunFactor * (config.sunIntensity ?? 2.5);
       moonLight.intensity = moonFactor * (config.moonIntensity ?? 0.8);
 
-      const dayColor = new THREE.Color(0x87ceeb);
-      const nightColor = new THREE.Color(0x020210);
-      const sunsetColor = new THREE.Color(0xff4500);
+      // Get sky colours from preset (default to sunset if not found)
+      const preset = skyPresets[config.envPreset ?? "sunset"] || skyPresets.sunset;
+      const dayColor = new THREE.Color(preset.day);
+      const nightColor = new THREE.Color(preset.night);
+      const sunsetColor = new THREE.Color(preset.sunset);
 
       const dayMix = THREE.MathUtils.smoothstep(normSunY, -0.2, 0.2);
       (scene.background as THREE.Color).lerpColors(nightColor, dayColor, dayMix);

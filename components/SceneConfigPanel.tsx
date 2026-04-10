@@ -223,8 +223,10 @@ function Section({
             transition={{ duration: 0.18 }}
             className="overflow-hidden"
           >
-            <div className="px-3 py-3 flex flex-col gap-3 bg-slate-950/40 pointer-events-auto">
+            <div className="px-3 pt-3 pb-6 flex flex-col gap-3 bg-slate-950/40 pointer-events-auto max-h-80 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#475569 transparent" }}>
               {children}
+              {/* Bottom buffer — scrollable extra space at end */}
+              <div className="h-12 shrink-0" />
             </div>
           </motion.div>
         )}
@@ -300,7 +302,7 @@ export function SceneConfigPanel({ config, onChange, onReset }: Props) {
             </div>
 
             {/* Scrollable sections */}
-            <div className="px-3 py-3 flex flex-col gap-2 max-h-[80vh] overflow-y-auto pointer-events-auto">
+            <div className="px-3 pt-3 pb-3 flex flex-col gap-2 max-h-[85vh] overflow-y-auto pointer-events-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#475569 transparent" }}>
 
               {/* ── TERRAIN ── */}
               <Section icon="🏔️" title="Terrain" defaultOpen>
