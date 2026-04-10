@@ -13,7 +13,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-slate-950/85 backdrop-blur-md text-gray-300 border-t border-slate-700/50">
+    <footer className="bg-gradient-to-t from-slate-900/80 to-transparent backdrop-blur-sm text-gray-300 border-t border-slate-700/30">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* About */}

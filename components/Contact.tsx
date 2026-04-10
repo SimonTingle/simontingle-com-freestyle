@@ -2,11 +2,23 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useI18n } from "@/hooks/useI18n";
 
 export function Contact() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const contactTitle = useI18n("contact.title");
+  const contactSubtitle = useI18n("contact.subtitle");
+  const emailLabel = useI18n("contact.form.email");
+  const messageLabel = useI18n("contact.form.message");
+  const emailPlaceholder = useI18n("contact.form.emailPlaceholder");
+  const messagePlaceholder = useI18n("contact.form.messagePlaceholder");
+  const sendBtn = useI18n("contact.form.submit");
+  const successMsg = useI18n("contact.form.success");
+  const orReachOut = useI18n("contact.alternate");
+  const githubLink = useI18n("contact.github");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +41,10 @@ export function Contact() {
         >
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Let's Work Together
+              {contactTitle.translated}
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300">
-              Have an idea for a project? I'd love to hear about it.
+              {contactSubtitle.translated}
             </p>
           </div>
 
@@ -45,7 +57,7 @@ export function Contact() {
               transition={{ delay: 0.1 }}
             >
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                Email
+                {emailLabel.translated}
               </label>
               <input
                 type="email"
@@ -53,7 +65,7 @@ export function Contact() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="your.email@example.com"
+                placeholder={emailPlaceholder.translated}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </motion.div>
@@ -65,7 +77,7 @@ export function Contact() {
               transition={{ delay: 0.2 }}
             >
               <label htmlFor="message" className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                Message
+                {messageLabel.translated}
               </label>
               <textarea
                 id="message"
@@ -73,7 +85,7 @@ export function Contact() {
                 onChange={(e) => setMessage(e.target.value)}
                 required
                 rows={6}
-                placeholder="Tell me about your project..."
+                placeholder={messagePlaceholder.translated}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </motion.div>
@@ -86,7 +98,7 @@ export function Contact() {
               type="submit"
               className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
             >
-              Send Message
+              {sendBtn.translated}
             </motion.button>
 
             {isSubmitted && (
@@ -96,7 +108,7 @@ export function Contact() {
                 exit={{ opacity: 0 }}
                 className="text-center text-green-600 dark:text-green-400 font-semibold"
               >
-                Thanks for reaching out! I'll get back to you soon.
+                {successMsg.translated}
               </motion.p>
             )}
           </form>
@@ -104,7 +116,7 @@ export function Contact() {
           {/* Alternative Contact Methods */}
           <div className="mt-12 pt-12 border-t border-gray-200 dark:border-gray-700">
             <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-              Or reach out directly:
+              {orReachOut.translated}
             </p>
             <div className="flex justify-center gap-6 flex-wrap">
               <a
@@ -119,7 +131,7 @@ export function Contact() {
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold"
               >
-                GitHub
+                {githubLink.translated}
               </a>
               <a
                 href="https://linkedin.com"

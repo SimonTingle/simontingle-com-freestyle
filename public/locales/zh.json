@@ -1,0 +1,36 @@
+{
+  "nav.home": "首页",
+  "nav.projects": "项目",
+  "nav.blog": "博客",
+  "nav.contact": "联系",
+
+  "hero.title": "西蒙 廷格尔",
+  "hero.subtitle": "用代码构建互动体验",
+
+  "about.title": "关于我",
+  "about.description.p1": "我是一名富有创意的开发者，热衷于构建互动、音乐驱动和引人入胜的网络体验。我专注于全栈开发，重点关注创意编码、音频处理和沉浸式用户界面。",
+  "about.description.p2": "我的项目涵盖音乐制作工具、能源管理应用和实验性网络技术。我喜欢探索技术与创意的交叉点。",
+  "about.cta.getInTouch": "取得联系",
+  "about.cta.github": "GitHub",
+  "about.techStack": "技术栈",
+
+  "contact.title": "让我们一起工作",
+  "contact.subtitle": "有项目想法吗？我很乐意听听。",
+  "contact.form.email": "电子邮件",
+  "contact.form.message": "信息",
+  "contact.form.emailPlaceholder": "your.email@example.com",
+  "contact.form.messagePlaceholder": "告诉我你的项目...",
+  "contact.form.submit": "发送消息",
+  "contact.form.success": "感谢您的联系！我很快就会回复。",
+  "contact.alternate": "或直接与我联系:",
+  "contact.github": "GitHub",
+  "contact.linkedin": "LinkedIn",
+  "contact.email": "hello@simontingle.com",
+
+  "footer.copyright": "© 2024 西蒙 廷格尔。版权所有。",
+  "footer.connect": "连接",
+  "footer.links.github": "GitHub",
+  "footer.links.linkedin": "LinkedIn",
+  "footer.links.twitter": "Twitter",
+  "footer.links.email": "电子邮件"
+}

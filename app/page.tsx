@@ -8,8 +8,11 @@ import { Contact } from "@/components/Contact";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { SceneConfigPanel, defaultConfig, type SceneConfig } from "@/components/SceneConfigPanel";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function Home() {
+  const heroTitle = useI18n("hero.title");
+  const heroSubtitle = useI18n("hero.subtitle");
   const [config, setConfig] = useState<SceneConfig>(defaultConfig);
 
   function handleChange(patch: Partial<SceneConfig>) {
@@ -31,14 +34,35 @@ export default function Home() {
         <Navigation />
 
         {/* Hero section */}
-        <section className="h-screen flex items-center justify-center pointer-events-none">
+        <section className="relative h-[92vh] flex items-center justify-center pointer-events-none">
           <div className="text-center">
             <h1 className="text-6xl md:text-8xl font-bold text-white tracking-wider drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
-              SIMON TINGLE
+              {heroTitle.translated}
             </h1>
             <p className="text-lg md:text-xl text-orange-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] tracking-wide mt-4">
-              Building interactive experiences with code
+              {heroSubtitle.translated}
             </p>
+          </div>
+
+          {/* Scroll indicator: animated chevron + peek hint */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pb-6 pointer-events-none">
+            {/* Animated chevron */}
+            <svg
+              className="w-5 h-5 text-white/40 hover:text-white/60 transition-colors duration-300 animate-bounce"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+            {/* Subtle fade-out gradient to About section below */}
+            <div className="h-4 w-24 bg-gradient-to-b from-transparent via-white/10 to-transparent opacity-30" />
           </div>
         </section>
 

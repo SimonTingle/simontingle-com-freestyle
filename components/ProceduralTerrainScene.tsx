@@ -52,10 +52,9 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     // ─── SCENE ───────────────────────────────────────────────────────────────
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
-    scene.fog = new THREE.FogExp2(0x87ceeb, config.fogDensity ?? 0.00008);
+    scene.fog = new THREE.FogExp2(0x87ceeb, config.fogDensity ?? 0.00015);
 
     // ─── CAMERA ──────────────────────────────────────────────────────────────
-    // Bug 6 fix: camera position matching reference [0, 3000, 5000], near=10, far=50000
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 10, 100000);
     camera.position.set(0, 8000, 12000);
     camera.lookAt(0, 0, 0);
@@ -760,6 +759,31 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       storm:     { day: 0x4a5f7f, night: 0x0a0a1a, sunset: 0x663344 },
     };
 
+    // Sky transitions: 2-hour dawn (5-7 AM) and dusk (17-19/5-7 PM) windows
+    // Between these windows, full day or full night.
+    function getTimeBasedTransition(hour: number): { dayMix: number; inDawn: boolean; inDusk: boolean } {
+      const DAWN_START = 5.0;    // 5:00 AM
+      const DAWN_END = 7.0;      // 7:00 AM
+      const DUSK_START = 17.0;   // 5:00 PM
+      const DUSK_END = 19.0;     // 7:00 PM
+
+      if (hour >= DAWN_START && hour < DAWN_END) {
+        // In dawn window: lerp from night (0) to day (1)
+        const progress = (hour - DAWN_START) / (DAWN_END - DAWN_START);
+        return { dayMix: progress, inDawn: true, inDusk: false };
+      } else if (hour >= DAWN_END && hour < DUSK_START) {
+        // Full day
+        return { dayMix: 1.0, inDawn: false, inDusk: false };
+      } else if (hour >= DUSK_START && hour < DUSK_END) {
+        // In dusk window: lerp from day (1) to night (0)
+        const progress = (hour - DUSK_START) / (DUSK_END - DUSK_START);
+        return { dayMix: 1.0 - progress, inDawn: false, inDusk: true };
+      } else {
+        // Full night (19:00-5:00)
+        return { dayMix: 0.0, inDawn: false, inDusk: false };
+      }
+    }
+
     // Bug 5 fix: full day/night cycle with sky + moon matching reference updateCelestialBodies
     function updateCelestialBodies() {
       const theta = (timeOfDay / 24) * Math.PI * 2 - Math.PI / 2;
@@ -787,12 +811,17 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
       const nightColor = new THREE.Color(preset.night);
       const sunsetColor = new THREE.Color(preset.sunset);
 
-      const dayMix = THREE.MathUtils.smoothstep(normSunY, -0.2, 0.2);
+      // Use time-based 2-hour transitions instead of sun position
+      const transition = getTimeBasedTransition(timeOfDay);
+      const dayMix = transition.dayMix;
+
+      // Blend night ↔ day based on 2-hour windows
       (scene.background as THREE.Color).lerpColors(nightColor, dayColor, dayMix);
 
-      if (Math.abs(normSunY) < 0.2 && normSunY > -0.2) {
-        const sunsetIntensity = 1.0 - Math.abs(normSunY) / 0.2;
-        (scene.background as THREE.Color).lerp(sunsetColor, sunsetIntensity * 0.3);
+      // Add subtle sunset colour during dusk transition
+      if (transition.inDusk) {
+        const duskIntensity = 1.0 - dayMix; // Stronger at start of dusk, weaker at end
+        (scene.background as THREE.Color).lerp(sunsetColor, duskIntensity * 0.2);
       }
 
       (scene.fog as THREE.FogExp2).color.copy(scene.background as THREE.Color);

@@ -64,7 +64,7 @@ export const defaultConfig: SceneConfig = {
   sunIntensity: 3.5,
   moonIntensity: 0.8,
 
-  fogDensity: 0.00008,
+  fogDensity: 0.00015,
   envPreset: "sunset",
 
   waterHeight: 500,

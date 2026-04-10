@@ -1,0 +1,36 @@
+{
+  "nav.home": "Inicio",
+  "nav.projects": "Proyectos",
+  "nav.blog": "Blog",
+  "nav.contact": "Contacto",
+
+  "hero.title": "SIMON TINGLE",
+  "hero.subtitle": "Construyendo experiencias interactivas con código",
+
+  "about.title": "Acerca de Mí",
+  "about.description.p1": "Soy un desarrollador creativo apasionado por construir experiencias web interactivas, impulsadas por música y atractivas. Me especializo en desarrollo full-stack con enfoque en codificación creativa, procesamiento de audio e interfaces de usuario inmersivas.",
+  "about.description.p2": "Mis proyectos abarcan herramientas de producción musical, aplicaciones de gestión de energía y tecnologías web experimentales. Me encanta explorar la intersección entre tecnología y creatividad.",
+  "about.cta.getInTouch": "Ponte en Contacto",
+  "about.cta.github": "GitHub",
+  "about.techStack": "Stack Tecnológico",
+
+  "contact.title": "Trabajemos Juntos",
+  "contact.subtitle": "¿Tienes una idea para un proyecto? Me encantaría escucharlo.",
+  "contact.form.email": "Correo Electrónico",
+  "contact.form.message": "Mensaje",
+  "contact.form.emailPlaceholder": "tu.correo@ejemplo.com",
+  "contact.form.messagePlaceholder": "Cuéntame sobre tu proyecto...",
+  "contact.form.submit": "Enviar Mensaje",
+  "contact.form.success": "¡Gracias por comunicarte! Pronto me pondré en contacto.",
+  "contact.alternate": "O contactame directamente:",
+  "contact.github": "GitHub",
+  "contact.linkedin": "LinkedIn",
+  "contact.email": "hello@simontingle.com",
+
+  "footer.copyright": "© 2024 Simon Tingle. Todos los derechos reservados.",
+  "footer.connect": "Conectar",
+  "footer.links.github": "GitHub",
+  "footer.links.linkedin": "LinkedIn",
+  "footer.links.twitter": "Twitter",
+  "footer.links.email": "Correo Electrónico"
+}

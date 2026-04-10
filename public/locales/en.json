@@ -1,0 +1,36 @@
+{
+  "nav.home": "Home",
+  "nav.projects": "Projects",
+  "nav.blog": "Blog",
+  "nav.contact": "Contact",
+
+  "hero.title": "SIMON TINGLE",
+  "hero.subtitle": "Building interactive experiences with code",
+
+  "about.title": "About Me",
+  "about.description.p1": "I'm a creative developer passionate about building interactive, music-driven, and engaging web experiences. I specialize in full-stack development with a focus on creative coding, audio processing, and immersive user interfaces.",
+  "about.description.p2": "My projects span music production tools, energy management apps, and experimental web technologies. I love exploring the intersection of technology and creativity.",
+  "about.cta.getInTouch": "Get in Touch",
+  "about.cta.github": "GitHub",
+  "about.techStack": "Tech Stack",
+
+  "contact.title": "Let's Work Together",
+  "contact.subtitle": "Have an idea for a project? I'd love to hear about it.",
+  "contact.form.email": "Email",
+  "contact.form.message": "Message",
+  "contact.form.emailPlaceholder": "your.email@example.com",
+  "contact.form.messagePlaceholder": "Tell me about your project...",
+  "contact.form.submit": "Send Message",
+  "contact.form.success": "Thanks for reaching out! I'll get back to you soon.",
+  "contact.alternate": "Or reach out directly:",
+  "contact.github": "GitHub",
+  "contact.linkedin": "LinkedIn",
+  "contact.email": "hello@simontingle.com",
+
+  "footer.copyright": "© 2024 Simon Tingle. All rights reserved.",
+  "footer.connect": "Connect",
+  "footer.links.github": "GitHub",
+  "footer.links.linkedin": "LinkedIn",
+  "footer.links.twitter": "Twitter",
+  "footer.links.email": "Email"
+}

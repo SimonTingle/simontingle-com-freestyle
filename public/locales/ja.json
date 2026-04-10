@@ -1,0 +1,36 @@
+{
+  "nav.home": "ホーム",
+  "nav.projects": "プロジェクト",
+  "nav.blog": "ブログ",
+  "nav.contact": "お問い合わせ",
+
+  "hero.title": "サイモン ティングル",
+  "hero.subtitle": "コードで対話的な体験を構築する",
+
+  "about.title": "自己紹介",
+  "about.description.p1": "私は、インタラクティブで音楽駆動の魅力的なWeb体験を構築することに情熱を持つクリエイティブ開発者です。クリエイティブコーディング、オーディオ処理、没入型ユーザーインターフェイスに焦点を当てたフルスタック開発を専門としています。",
+  "about.description.p2": "私のプロジェクトは、音楽制作ツール、エネルギー管理アプリ、実験的なWeb技術に及びます。技術と創造性の交差点を探索することが大好きです。",
+  "about.cta.getInTouch": "お問い合わせ",
+  "about.cta.github": "GitHub",
+  "about.techStack": "技術スタック",
+
+  "contact.title": "一緒に働きましょう",
+  "contact.subtitle": "プロジェクトのアイデアはありますか？ぜひお聞かせください。",
+  "contact.form.email": "メール",
+  "contact.form.message": "メッセージ",
+  "contact.form.emailPlaceholder": "your.email@example.com",
+  "contact.form.messagePlaceholder": "プロジェクトについて教えてください...",
+  "contact.form.submit": "メッセージを送信",
+  "contact.form.success": "お問い合わせいただきありがとうございます！まもなくご連絡します。",
+  "contact.alternate": "または直接お問い合わせください:",
+  "contact.github": "GitHub",
+  "contact.linkedin": "LinkedIn",
+  "contact.email": "hello@simontingle.com",
+
+  "footer.copyright": "© 2024 Simon Tingle. すべての権利は保有されています。",
+  "footer.connect": "接続",
+  "footer.links.github": "GitHub",
+  "footer.links.linkedin": "LinkedIn",
+  "footer.links.twitter": "Twitter",
+  "footer.links.email": "メール"
+}
