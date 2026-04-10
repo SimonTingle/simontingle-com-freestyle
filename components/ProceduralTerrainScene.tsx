@@ -346,11 +346,11 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     deciduousTrunks.instanceMatrix.needsUpdate = true;
 
     // ─── BIRDS (BOID SYSTEM) ─────────────────────────────────────────────────
-    const MAX_BIRDS = 5;  // Max 1-5 birds in a single flock
+    const MAX_BIRDS = 40;  // Total instance slots — supports several concurrent flocks of 1–5 birds
 
     // Bird geometry — gull silhouette, simple W shape (MUCH LARGER for visibility)
     function createBirdGeo(): THREE.BufferGeometry {
-      const W = 300; // half-wingspan (5x larger)
+      const W = 600; // half-wingspan (10x larger for better visibility)
       const positions = new Float32Array([
         // Left wing tip
         -W, 40, 0,
@@ -405,7 +405,7 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
 
     const birdMesh = new THREE.InstancedMesh(birdGeo, birdMat, MAX_BIRDS);
     birdMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    birdMesh.count = MAX_BIRDS;
+    birdMesh.count = 0;  // Start with 0 birds, increment as we spawn flocks
     birdMesh.renderOrder = 1000;  // Render on top of everything
     birdMesh.frustumCulled = false;  // Never cull, always render
     // Hide all initially
@@ -416,20 +416,31 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
 
 
     // ── Boid Class ────────────────────────────────────────────────────────────
+    // All speed/force values are tuned for a 60fps baseline and scaled by
+    // (delta * 60) inside move(), so movement is frame-rate independent.
+    //
+    // Smoothing strategy:
+    //   • Low weights on separation / cohesion so boids don't jitter from
+    //     close-neighbor corrections.
+    //   • targetVelocity accumulates forces, then velocity LERPs toward it
+    //     each frame (low-pass filter) — removes high-frequency direction
+    //     noise from wind + steering without killing responsiveness.
     class Boid {
       position = new THREE.Vector3();
       velocity = new THREE.Vector3();
+      targetVelocity = new THREE.Vector3();
       acceleration = new THREE.Vector3();
-      neighborhoodRadius = 800;
-      maxSpeed = 30;  // 50% slower (was 60)
-      maxSteerForce = 2.5;  // 50% slower (was 5)
+      neighborhoodRadius = 2000; // large enough to keep the wedge formation cohesive
+      maxSpeed = 45;
+      maxSteerForce = 0.8;     // lower clamp = gentler corrections
+      turnSmoothness = 0.05;   // very smooth turns
 
-      run(boids: Boid[]) {
+      run(boids: Boid[], delta: number) {
         // Flocking behavior
         this.separation(boids);
         this.alignment(boids);
         this.cohesion(boids);
-        this.move();
+        this.move(delta);
       }
 
       separation(boids: Boid[]) {
@@ -449,7 +460,7 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
         if (steer.length() > this.maxSteerForce) {
           steer.normalize().multiplyScalar(this.maxSteerForce);
         }
-        this.acceleration.add(steer.multiplyScalar(1.5));
+        this.acceleration.add(steer.multiplyScalar(0.4));  // was 1.5
       }
 
       alignment(boids: Boid[]) {
@@ -468,7 +479,7 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
             avg.normalize().multiplyScalar(this.maxSteerForce);
           }
         }
-        this.acceleration.add(avg.multiplyScalar(1.0));
+        this.acceleration.add(avg.multiplyScalar(0.8));  // keep strong — makes flocks cohesive
       }
 
       cohesion(boids: Boid[]) {
@@ -489,69 +500,106 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
             steer.normalize().multiplyScalar(this.maxSteerForce);
           }
         }
-        this.acceleration.add(steer.multiplyScalar(1.0));
+        this.acceleration.add(steer.multiplyScalar(0.3));  // was 1.0
       }
 
-      move() {
-        this.velocity.add(this.acceleration);
-        const len = this.velocity.length();
-        if (len > this.maxSpeed) {
-          this.velocity.divideScalar(len / this.maxSpeed);
+      move(delta: number) {
+        // Scale per-frame math by (delta * 60) so motion is frame-rate
+        // independent. At 60fps the scale is 1.0.
+        const dt = Math.min(delta, 0.1) * 60;
+
+        // Accumulate steering into the TARGET velocity (not the live one).
+        this.targetVelocity.add(this.acceleration.multiplyScalar(dt));
+        const tLen = this.targetVelocity.length();
+        if (tLen > this.maxSpeed) {
+          this.targetVelocity.multiplyScalar(this.maxSpeed / tLen);
         }
-        this.position.add(this.velocity);
-        this.acceleration.multiplyScalar(0);
+
+        // Low-pass filter: live velocity slowly chases the target. This is
+        // what eliminates visible zigzag — any high-frequency wobble in the
+        // target averages out over ~15 frames (≈¼ s at 60fps).
+        const k = Math.min(this.turnSmoothness * dt, 1);
+        this.velocity.lerp(this.targetVelocity, k);
+
+        this.position.addScaledVector(this.velocity, dt);
+        this.acceleration.set(0, 0, 0);
       }
     }
 
     // ── Flock instance with Boids ──────────────────────────────────────────────
+    // NOTE: we keep an ARRAY of flocks so multiple can be in the air at once.
+    // Each flock remembers which direction it's travelling and where it
+    // spawned, so we can detect when it has fully crossed the visible area.
     interface BoidFlock {
       boids: Boid[];
-      goal: THREE.Vector3 | null;
-      active: boolean;
-      lifespan: number;
+      goal: THREE.Vector3;
+      direction: 1 | -1;      // +1 = flying right (+X), -1 = flying left (-X)
+      spawnX: number;          // |x| where flock originated
+      spawnTime: number;       // elapsed time when spawned
     }
 
-    let currentFlock: BoidFlock | null = null;
-    let nextFlockSpawn = 3;
+    const MAX_FLOCKS = 5;
+    const flocks: BoidFlock[] = [];
+    let nextFlockSpawn = 2;   // Initial spawn after 2 seconds
+
+    // Spawn distance must be large enough to keep birds off-camera at start,
+    // but small enough that the crossing doesn't take forever. The goal is
+    // placed WAY past the opposite edge so goal-steering never relaxes
+    // mid-screen and birds keep driving toward the far side.
+    const BIRD_SPAWN_X = 18000;
+    const BIRD_GOAL_X = 60000;   // effectively "keep going forever"
+    const BIRD_OFFSCREEN_X = BIRD_SPAWN_X + 2000; // removal threshold past opposite edge
 
     function spawnNewFlock(time: number) {
-      const count = Math.floor(Math.random() * 5) + 1;  // 1-5 birds
+      if (flocks.length >= MAX_FLOCKS) {
+        nextFlockSpawn = time + 4 + Math.random() * 6;
+        return;
+      }
+
+      const count = Math.floor(Math.random() * 4) + 2;  // 2-5 birds per flock
       const boids: Boid[] = [];
 
-      // Start from left or right edge, middle of screen vertically
       const goRight = Math.random() > 0.5;
-      const edge = WORLD_SIZE * 0.52;
-      const startX = goRight ? -edge : edge;
-      const startZ = (Math.random() - 0.5) * WORLD_SIZE * 0.3;  // Narrower Z range
-      const startY = 2500 + Math.random() * 1000;  // Lower altitude (middle of screen)
+      const direction: 1 | -1 = goRight ? 1 : -1;
+      const startX = -direction * BIRD_SPAWN_X;
+      const startZ = (Math.random() - 0.5) * WORLD_SIZE * 0.15;
+      const startY = 3000 + Math.random() * 1500;
 
-      const goalX = goRight ? edge : -edge;
-      const goalZ = (Math.random() - 0.5) * WORLD_SIZE * 0.3;
-      const goalY = 2500 + Math.random() * 1000;  // Lower goal altitude
+      const goalX = direction * BIRD_GOAL_X;
+      const goalZ = startZ + (Math.random() - 0.5) * 2000;
+      const goalY = startY + (Math.random() - 0.5) * 500;
 
+      // Spread birds in a V/wedge formation — stagger along travel axis and
+      // fan out on the Z axis so each bird is clearly visible as a separate silhouette.
       for (let i = 0; i < count; i++) {
         const boid = new Boid();
+        // Leader at front, others stagger back along X and spread on Z.
+        // Spacing chosen so birds are well separated at their ~600-unit wingspan.
+        const rank = i;  // 0 = leader
+        const side = (i % 2 === 0 ? 1 : -1) * Math.ceil(i / 2);
         boid.position.set(
-          startX + (Math.random() - 0.5) * 200,
+          startX - direction * rank * 1200,     // each bird 1200 units behind the last
           startY + (Math.random() - 0.5) * 200,
-          startZ + (Math.random() - 0.5) * 200
+          startZ + side * 1400                  // fan out 1400 units per slot
         );
         boid.velocity.set(
-          (Math.random() - 0.5) * 25,  // 50% slower (was 50, now 25)
-          (Math.random() - 0.5) * 15,  // 50% slower (was 30, now 15)
-          (Math.random() - 0.5) * 25   // 50% slower (was 50, now 25)
+          direction * 35,
+          (Math.random() - 0.5) * 1.5,
+          (Math.random() - 0.5) * 1.5
         );
+        boid.targetVelocity.copy(boid.velocity);
         boids.push(boid);
       }
 
-      currentFlock = {
+      flocks.push({
         boids,
         goal: new THREE.Vector3(goalX, goalY, goalZ),
-        active: true,
-        lifespan: 120,  // Stay alive for 2 minutes (plenty of time to cross world)
-      };
+        direction,
+        spawnX: BIRD_SPAWN_X,
+        spawnTime: time,
+      });
 
-      nextFlockSpawn = time + 10 + Math.random() * 15;  // Next flock spawns 10-25 seconds later
+      nextFlockSpawn = time + 8 + Math.random() * 7;  // Next flock 8–15s later
     }
 
     const birdQ = new THREE.Quaternion();
@@ -559,76 +607,80 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
     const fwdVec = new THREE.Vector3(0, 0, 1);
     const birdMx = new THREE.Matrix4();
 
+    const toGoalVec = new THREE.Vector3();
+    const windVec = new THREE.Vector3();
+    const dirVec = new THREE.Vector3();
+
     function updateBirds(time: number, delta: number, windStr: number) {
-      // Spawn new flock if needed
+      // Spawn a new flock whenever the timer elapses (respects MAX_FLOCKS inside).
       if (time >= nextFlockSpawn) {
         spawnNewFlock(time);
       }
 
-      if (!currentFlock || !currentFlock.active) {
-        birdMesh.count = 0;
-        return;
-      }
+      // Walk flocks in reverse so we can splice cleanly while iterating.
+      for (let f = flocks.length - 1; f >= 0; f--) {
+        const flock = flocks[f];
 
-      // Check if birds have flown off-screen
-      let anyVisible = false;
-      for (const boid of currentFlock.boids) {
-        const dist = Math.abs(boid.position.x);
-        if (dist < WORLD_SIZE * 0.6) {
-          anyVisible = true;
-          break;
-        }
-      }
-
-      if (!anyVisible) {
-        currentFlock.active = false;
-        birdMesh.count = 0;
-        return;
-      }
-
-      currentFlock.lifespan -= delta;
-      if (currentFlock.lifespan <= 0) {
-        currentFlock.active = false;
-        birdMesh.count = 0;
-        return;
-      }
-
-      // Update boids
-      for (const boid of currentFlock.boids) {
-        // Gentle steering toward goal (don't snap, let them drift)
-        if (currentFlock.goal) {
-          const toGoal = new THREE.Vector3().subVectors(currentFlock.goal, boid.position);
-          const distance = toGoal.length();
-          if (distance > 500) {
-            toGoal.normalize().multiplyScalar(0.5);  // Very gentle steering
-            boid.acceleration.add(toGoal);
+        // Flock has finished its journey once EVERY boid has crossed past
+        // the opposite edge. This is the only removal criterion besides a
+        // safety timeout — no more "|x| < 24000" check that was killing them
+        // mid-flight.
+        let allOffScreen = true;
+        for (const boid of flock.boids) {
+          if (flock.direction === 1) {
+            if (boid.position.x < BIRD_OFFSCREEN_X) { allOffScreen = false; break; }
+          } else {
+            if (boid.position.x > -BIRD_OFFSCREEN_X) { allOffScreen = false; break; }
           }
         }
 
-        // Apply wind
-        const windForce = new THREE.Vector3(
-          Math.sin(time * windStr * 0.3 + boid.position.x * 0.001) * 20,
-          Math.sin(time * 0.5 + boid.position.y * 0.001) * 10,
-          Math.cos(time * windStr * 0.25 + boid.position.z * 0.001) * 20
-        );
-        boid.acceleration.add(windForce);
+        // Safety timeout — in the worst case (wind pushing against travel
+        // direction) a flock should still be gone after 90 seconds.
+        if (allOffScreen || (time - flock.spawnTime) > 90) {
+          flocks.splice(f, 1);
+          continue;
+        }
 
-        boid.run(currentFlock.boids);
+        // Update boids in this flock
+        for (const boid of flock.boids) {
+          // Always steer toward goal — goal is far past the opposite edge so
+          // this never relaxes and birds keep driving forward. Gentle pull
+          // so the flock glides rather than jerking toward the goal.
+          toGoalVec.subVectors(flock.goal, boid.position).normalize().multiplyScalar(0.25);
+          boid.acceleration.add(toGoalVec);
+
+          // VERY gentle wind perturbation — previous magnitudes of 8/4/8
+          // were the main source of visible wobble. These are small enough
+          // that the velocity low-pass filter smooths them into a slow drift.
+          windVec.set(
+            Math.sin(time * 0.2 + boid.position.x * 0.0003) * 1.2,
+            Math.sin(time * 0.35 + boid.position.y * 0.0003) * 0.4,
+            Math.cos(time * 0.18 + boid.position.z * 0.0003) * 1.2
+          );
+          boid.acceleration.add(windVec);
+
+          boid.run(flock.boids, delta);
+        }
       }
 
-      // Update instance matrices
-      for (let i = 0; i < currentFlock.boids.length; i++) {
-        const boid = currentFlock.boids[i];
-        const nextPos = new THREE.Vector3().addVectors(boid.position, boid.velocity.clone().multiplyScalar(0.05));
-        const dir = new THREE.Vector3().subVectors(nextPos, boid.position).normalize();
-
-        birdQ.setFromUnitVectors(fwdVec, dir);
-        birdMx.compose(boid.position, birdQ, birdS);  // Use normal scale (1,1,1)
-        birdMesh.setMatrixAt(i, birdMx);
+      // Write every boid across every flock into the shared instanced mesh.
+      let instIdx = 0;
+      for (const flock of flocks) {
+        for (const boid of flock.boids) {
+          if (instIdx >= MAX_BIRDS) break;
+          dirVec.copy(boid.velocity);
+          if (dirVec.lengthSq() > 1e-6) dirVec.normalize();
+          else dirVec.set(flock.direction, 0, 0);
+          birdQ.setFromUnitVectors(fwdVec, dirVec);
+          birdMx.compose(boid.position, birdQ, birdS);
+          birdMesh.setMatrixAt(instIdx, birdMx);
+          instIdx++;
+        }
+        if (instIdx >= MAX_BIRDS) break;
       }
 
-      birdMesh.count = currentFlock.boids.length;
-      birdMesh.instanceMatrix.needsUpdate = true;
+      birdMesh.count = instIdx;
+      if (instIdx > 0) birdMesh.instanceMatrix.needsUpdate = true;
     }
 
     // ─── ANIMATION LOOP ───────────────────────────────────────────────────────
@@ -728,8 +780,9 @@ export function ProceduralTerrainScene({ config }: ProceduralTerrainSceneProps) 
 
       // Debug: log birds every 30 seconds
       if (time - lastBirdLog >= 30) {
-        const birdCount = currentFlock && currentFlock.active ? currentFlock.boids.length : 0;
-        console.log(`🐦 Boid flock: ${birdCount} birds active`);
+        let birdCount = 0;
+        for (const fl of flocks) birdCount += fl.boids.length;
+        console.log(`🐦 Boid flocks: ${flocks.length} (${birdCount} birds)`);
         lastBirdLog = time;
       }
 
