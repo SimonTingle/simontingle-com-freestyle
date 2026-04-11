@@ -18,7 +18,7 @@ interface TranslationCache {
 
 const DEFAULT_LANGUAGE = "en";
 const cache: TranslationCache = {};
-let loadingPromises: { [language: string]: Promise<void> } = {};
+let loadingPromises: { [language: string]: Promise<void> | undefined } = {};
 
 /**
  * Load a language JSON file with error handling
