@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SUPPORTED_LANGUAGES, detectUserLanguage, setUserLanguage } from "@/utils/translate";
 
 // ---------------------------------------------------------------------------
 // Config schema + defaults
@@ -278,6 +279,19 @@ const WATER_SHALLOW_COLORS = ["#0a5560", "#1060a0", "#108040", "#607030", "#6060
 
 export function SceneConfigPanel({ config, onChange, onReset }: Props) {
   const [open, setOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState("en");
+
+  useEffect(() => {
+    setCurrentLang(detectUserLanguage());
+  }, []);
+
+  const handleLanguageChange = (lang: string) => {
+    setCurrentLang(lang);
+    setUserLanguage(lang);
+    setLangOpen(false);
+    window.dispatchEvent(new CustomEvent("languageChange", { detail: { language: lang } }));
+  };
 
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-3 pointer-events-auto">
@@ -470,25 +484,70 @@ export function SceneConfigPanel({ config, onChange, onReset }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Gear toggle button */}
-      <motion.button
-        onClick={() => setOpen((o) => !o)}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
-        className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg border transition-colors pointer-events-auto ${
-          open
-            ? "bg-blue-600 border-blue-400 text-white"
-            : "bg-slate-950/80 backdrop-blur-md border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500"
-        }`}
-        aria-label="Toggle scene settings"
-      >
-        <motion.div
-          animate={{ rotate: open ? 60 : 0 }}
-          transition={{ duration: 0.35, ease: "easeInOut" }}
+      {/* Bottom row: language selector (mobile) + gear button */}
+      <div className="flex flex-row items-center gap-2">
+
+        {/* Language selector - mobile only */}
+        <div className="md:hidden relative">
+          <motion.button
+            onClick={() => setLangOpen((o) => !o)}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg border bg-slate-950/80 backdrop-blur-md border-slate-700/60 hover:border-slate-500 pointer-events-auto"
+            aria-label="Select language"
+          >
+            <span className="text-xl leading-none">
+              {SUPPORTED_LANGUAGES[currentLang as keyof typeof SUPPORTED_LANGUAGES]?.flag ?? "🌐"}
+            </span>
+          </motion.button>
+          <AnimatePresence>
+            {langOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full right-0 mt-2 bg-slate-800/95 backdrop-blur-sm rounded-lg border border-slate-700/50 overflow-hidden z-50 max-h-64 overflow-y-auto"
+              >
+                {Object.entries(SUPPORTED_LANGUAGES).map(([code, lang]) => (
+                  <button
+                    key={code}
+                    onClick={() => handleLanguageChange(code)}
+                    className={`w-full px-4 py-2 text-left flex items-center gap-2 transition-colors ${
+                      currentLang === code
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-300 hover:bg-slate-700 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-lg">{lang.flag}</span>
+                    <span className="text-sm">{lang.name}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Gear toggle button */}
+        <motion.button
+          onClick={() => setOpen((o) => !o)}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg border transition-colors pointer-events-auto ${
+            open
+              ? "bg-blue-600 border-blue-400 text-white"
+              : "bg-slate-950/80 backdrop-blur-md border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500"
+          }`}
+          aria-label="Toggle scene settings"
         >
-          <GearIcon className="w-5 h-5" />
-        </motion.div>
-      </motion.button>
+          <motion.div
+            animate={{ rotate: open ? 60 : 0 }}
+            transition={{ duration: 0.35, ease: "easeInOut" }}
+          >
+            <GearIcon className="w-5 h-5" />
+          </motion.div>
+        </motion.button>
+      </div>
     </div>
   );
 }
