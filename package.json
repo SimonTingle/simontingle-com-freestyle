@@ -9,14 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@pqina/flip": "^1.8.4",
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
+    "framer-motion": "^11.0.0",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "three": "^0.176.0",
-    "@react-three/fiber": "^9.0.0",
-    "@react-three/drei": "^10.0.0",
-    "framer-motion": "^11.0.0",
-    "rss": "^1.2.2"
+    "rss": "^1.2.2",
+    "three": "^0.176.0"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.4",

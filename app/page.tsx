@@ -36,10 +36,20 @@ export default function Home() {
         {/* Hero section */}
         <section className="relative h-[92vh] flex items-center justify-center pointer-events-none">
           <div className="text-center">
-            <h1 className="text-6xl md:text-8xl font-bold text-white tracking-wider drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+            <h1
+              className="text-6xl md:text-8xl font-bold text-white tracking-wider"
+              style={{
+                textShadow: '0 0 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.15)'
+              }}
+            >
               {heroTitle.translated}
             </h1>
-            <p className="text-lg md:text-xl text-orange-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] tracking-wide mt-4">
+            <p
+              className="text-lg md:text-xl text-orange-100/90 tracking-wide mt-4"
+              style={{
+                textShadow: '0 0 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.15)'
+              }}
+            >
               {heroSubtitle.translated}
             </p>
           </div>

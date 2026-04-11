@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SUPPORTED_LANGUAGES, detectUserLanguage, setUserLanguage } from "@/utils/translate";
+import { FlipClock } from "./FlipClock";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,14 +34,19 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-gradient-to-b from-slate-900/80 to-transparent backdrop-blur-sm">
+      {/* Flip Clock in upper left corner */}
+      <div className="hidden md:block absolute" style={{ top: 'calc(1rem + 10px)', left: 'calc(1rem + 40px)' }}>
+        <FlipClock />
+      </div>
+
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="text-2xl font-bold text-white">
+        <Link href="/" className="text-2xl font-bold text-white" style={{ marginLeft: '40px' }}>
           ST
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex gap-8 items-center">
+        {/* Desktop Navigation + Language Selector */}
+        <div className="hidden md:flex gap-6 items-center ml-auto">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -50,10 +56,9 @@ export function Navigation() {
               {item.label}
             </Link>
           ))}
-        </div>
 
-        {/* Language Selector - Desktop */}
-        <div className="hidden md:relative md:block">
+          {/* Language Selector - Desktop */}
+          <div className="relative">
           <button
             onClick={() => setLangOpen(!langOpen)}
             className="flex items-center gap-2 px-3 py-2 text-white hover:text-blue-400 transition-colors font-medium"
@@ -87,6 +92,7 @@ export function Navigation() {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
         </div>
 
         {/* Mobile Menu Button */}

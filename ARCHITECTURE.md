@@ -1,584 +1,399 @@
-# Simon Tingle Portfolio - Complete Architecture & Construction Guide
+# Site Architecture Documentation
 
-## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Technology Stack](#technology-stack)
-3. [Project Structure](#project-structure)
-4. [Core Systems](#core-systems)
-5. [Components & Pages](#components--pages)
-6. [Styling & Design](#styling--design)
-7. [Internationalization (i18n)](#internationalization-i18n)
-8. [Build & Deployment](#build--deployment)
-9. [Key Implementation Details](#key-implementation-details)
-10. [Recent Changes & Current State](#recent-changes--current-state)
-
----
-
-## Project Overview
-
-**Project Name:** Simon Tingle Creative Developer Portfolio
-**Framework:** Next.js 15 (App Router)
-**Language:** TypeScript (TSX for components)
-**Styling:** Tailwind CSS + Custom CSS animations
-**Purpose:** Showcase creative development skills with interactive 3D terrain, project portfolio, and multi-language support
-
-**Key Features:**
-- Interactive 3D procedural terrain visualization (Three.js)
-- Multi-language support (8 languages: EN, ES, FR, DE, IT, PT, JA, ZH)
-- Responsive design with dark mode support
-- Animated sections with Framer Motion
-- DJ Tingle music production tools showcase
-- Street Driver 3D game showcase
-- Live Fuel Tracker energy monitoring dashboard
-- Contact form with multi-language support
-
----
-
-## Technology Stack
-
-### Frontend
-- **React 19** - UI framework
-- **Next.js 15** - Full-stack React framework with App Router
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first CSS framework
-- **Framer Motion** - Animation library
-- **Three.js** - 3D graphics library
-- **React Three Fiber** (implied) - React renderer for Three.js
-
-### Styling
-- **Tailwind CSS** - Primary utility-based styling
-- **CSS-in-JS** - Inline styles for dynamic styling (text-shadow glows, etc.)
-- **Custom keyframe animations** - Defined in component files
-- **Dark mode support** - Using Tailwind's dark: prefix
-
-### Build & Development
-- **npm** - Package manager
-- **TypeScript compiler** - Type checking
-- **ESLint** - Code linting
-- **Next.js Dev Server** - Development environment on port 3000
+## Overview
+Simon Tingle's portfolio website is built with **Next.js 15** (App Router), **React 19**, **TypeScript**, **Tailwind CSS**, **Three.js**, and **Framer Motion**. The site features an interactive 3D terrain background, dynamic configuration panel, multi-language support, and responsive design.
 
 ---
 
 ## Project Structure
 
 ```
-SIMONTINGLE-COM/
 ├── app/
-│   ├── page.tsx                 # Main home page (hero + all sections)
-│   ├── layout.tsx              # Root layout
-│   ├── blog/
-│   │   └── page.tsx            # Blog page (referenced but not detailed)
-│   └── (other routes)
+│   ├── page.tsx                 # Main page (hero + sections)
+│   ├── layout.tsx               # Root layout
+│   ├── blog/                    # Blog section (future)
+│   └── globals.css              # Global styles
 │
 ├── components/
-│   ├── ProceduralTerrainScene.tsx   # 3D terrain background (Three.js)
-│   ├── SceneConfigPanel.tsx         # Terrain config controls
-│   ├── Navigation.tsx               # Header with language selector
-│   ├── Footer.tsx                  # Footer component
-│   ├── About.tsx                   # About section with Tech Stack
-│   ├── Contact.tsx                 # Contact form section
-│   ├── ProjectShowcase.tsx         # Project portfolio section
-│   └── (other UI components)
+│   ├── Hero3D.tsx               # 3D hero scene with terrain & trees
+│   ├── ProceduralTerrainScene.tsx # Alternative procedural terrain
+│   ├── About.tsx                # About section with tech stack
+│   ├── Navigation.tsx           # Top navigation bar
+│   ├── FlipClock.tsx            # Time display (HH:MM DAY DATE)
+│   ├── ProjectShowcase.tsx      # Project portfolio grid
+│   ├── Contact.tsx              # Contact form section
+│   ├── Footer.tsx               # Footer
+│   └── SceneConfigPanel.tsx     # Settings panel for scene configuration
 │
 ├── hooks/
-│   └── useI18n.ts              # Custom i18n hook for translations
+│   └── useI18n.ts               # Multi-language translation hook
 │
 ├── utils/
-│   ├── i18n.ts                 # Translation engine & utilities
-│   ├── translate.ts            # Language detection & storage
-│   └── (other utilities)
+│   └── translate.ts             # Translation & language detection
 │
 ├── public/
-│   └── locales/
-│       ├── en.json             # English translations
-│       ├── es.json             # Spanish translations
-│       ├── fr.json             # French translations
-│       ├── de.json             # German translations
-│       ├── it.json             # Italian translations
-│       ├── pt.json             # Portuguese translations
-│       ├── ja.json             # Japanese translations
-│       └── zh.json             # Chinese translations
+│   └── locales/                 # Translation files (en, es, fr, etc.)
 │
-├── docs/
-│   └── TRANSLATIONS.md          # Translation key documentation
-│
-├── scripts/
-│   └── validate-translations.js # Script to validate i18n completeness
-│
-├── README.md                    # Standard Next.js README
-├── CLAUDE.md                    # Claude Code instructions
-├── AGENTS.md                    # Agent instructions (breaking changes)
-├── ARCHITECTURE.md              # This file
-│
-├── package.json
-├── tsconfig.json
-├── next.config.js
-├── tailwind.config.js
-└── .claude/
-    └── (Claude Code settings)
+└── [config files]
+    ├── tsconfig.json
+    ├── tailwind.config.js
+    ├── next.config.js
+    └── package.json
 ```
 
 ---
 
-## Core Systems
+## Component Hierarchy
 
-### 1. Internationalization (i18n) System
+```
+Home (app/page.tsx)
+├── ProceduralTerrainScene (fixed background)
+├── SceneConfigPanel (floating settings)
+├── Navigation
+│   ├── FlipClock (upper left)
+│   └── Language selector
+├── Hero Section (h1 + subtitle + scroll indicator)
+├── About
+│   ├── Description text
+│   ├── Tech stack grid
+│   └── CTA buttons (Get in Touch, GitHub, LinkedIn)
+├── ProjectShowcase
+└── Contact
+└── Footer
+```
 
-#### How It Works
-The i18n system provides 8-language support with a 3-level fallback hierarchy:
-1. **Requested language** → 2. **English fallback** → 3. **Formatted key name**
+---
 
-#### File Locations
-- **Translation keys:** `/utils/i18n.ts`
-- **Language detection:** `/utils/translate.ts`
-- **React hook:** `/hooks/useI18n.ts`
-- **JSON data:** `/public/locales/*.json` (8 language files)
-- **Validation:** `/scripts/validate-translations.js`
-- **Documentation:** `/docs/TRANSLATIONS.md`
+## Key Features & Recent Changes
 
-#### Key Components
+### 1. **3D Terrain with Level of Detail (LOD) System**
+   - **Location**: `components/Hero3D.tsx`
+   - **Feature**: Procedural rolling hills terrain with 4 geometry quality levels
+   - **LOD Levels**:
+     - 0-8 units: 120×120 segments (ultra high detail)
+     - 8-25 units: 60×60 segments (high detail)
+     - 25-50 units: 30×30 segments (medium detail)
+     - 50+ units: 12×12 segments (low detail)
+   - **Benefit**: Smooth performance degradation based on camera distance
+   - **Status**: ✅ Recently implemented
 
-**`/utils/translate.ts` - Language Management**
+### 2. **Interactive Trees with Wind Effect**
+   - **Location**: `components/Hero3D.tsx` - `Trees` component
+   - **Features**:
+     - Instanced mesh rendering (cone foliage + cylinder trunks)
+     - Wind effect applied to trees within 0-50 units of camera
+     - Sine/cosine wave animation for natural swaying motion
+   - **Control**: Wind strength slider in Scene Settings panel (0-100%)
+   - **Status**: ✅ Recently implemented
+
+### 3. **Scene Configuration Panel**
+   - **Location**: `components/SceneConfigPanel.tsx`
+   - **Access**: Gear icon (top right corner)
+   - **Sections**:
+     - **Terrain**: Height scale, roughness, color, LOD quality
+     - **Time of Day**: Manual/automatic cycle, sun/moon intensity
+     - **Atmosphere**: Fog density, sky presets
+     - **Water**: Level, wave height, ripple strength, colors
+     - **Vegetation**: Tree density, scale, tree line, Fir/Deciduous ratio, **wind strength**
+     - **Birds**: Enable/disable, scale, speed, flock size (future feature)
+     - **Performance**: Shadows, antialiasing options
+   - **Reset**: One-click reset to defaults
+   - **Status**: ✅ Fully functional with wind strength control
+
+### 4. **Typography & Text Effects**
+   - **Hero Title & Subtitle**: Soft black glow highlight
+     - Text-shadow: `0 0 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.15)`
+     - Creates subtle depth without harsh shadows
+   - **Tech Stack Glow** (About section): Increased brightness
+     - Text-shadow: `0 0 20px rgba(255, 255, 255, 0.73), 0 0 40px rgba(255, 255, 255, 0.36)`
+   - **Status**: ✅ Recently refined
+
+### 5. **Navigation & UI Elements**
+   - **FlipClock**: Displays time, day, and date in upper-left corner
+     - Updates every second
+     - Responsive (hidden on mobile)
+     - Custom flip-clock styling
+   - **Language Selector**: Multi-language support (detected from browser)
+   - **LinkedIn Button**: Added to About section with LinkedIn branding
+   - **Status**: ✅ Fully implemented
+
+### 6. **Multi-Language Support**
+   - **Hook**: `useI18n` for component-level translations
+   - **Supported Languages**: English, Spanish, French, German, Portuguese, etc.
+   - **Detection**: Automatic browser language detection
+   - **Storage**: localStorage persistence
+   - **Status**: ✅ Functional
+
+---
+
+## Technical Stack
+
+| Technology | Purpose |
+|-----------|---------|
+| **Next.js 15** | React framework with SSR/SSG |
+| **React 19** | UI library |
+| **TypeScript** | Type safety |
+| **Tailwind CSS** | Utility-first styling |
+| **Three.js** | 3D graphics & terrain |
+| **React Three Fiber** | React wrapper for Three.js |
+| **Framer Motion** | UI animations |
+| **@react-three/drei** | Helpful 3D utilities |
+
+---
+
+## State Management
+
+### Page-Level Config (app/page.tsx)
 ```typescript
-SUPPORTED_LANGUAGES = {
-  en: { name: "English", flag: "🇬🇧", code: "en" },
-  es: { name: "Español", flag: "🇪🇸", code: "es" },
-  fr: { name: "Français", flag: "🇫🇷", code: "fr" },
-  de: { name: "Deutsch", flag: "🇩🇪", code: "de" },
-  it: { name: "Italiano", flag: "🇮🇹", code: "it" },
-  pt: { name: "Português", flag: "🇵🇹", code: "pt" },
-  ja: { name: "日本語", flag: "🇯🇵", code: "ja" },
-  zh: { name: "中文", flag: "🇨🇳", code: "zh" }
-}
+const [config, setConfig] = useState<SceneConfig>(defaultConfig);
 ```
-- **British flag** for English (🇬🇧, not 🇺🇸)
-- `detectUserLanguage()` - Checks localStorage → browser settings → defaults to English
-- `setUserLanguage()` - Persists user preference to localStorage
+- Manages scene configuration
+- Passed to `ProceduralTerrainScene` and `SceneConfigPanel`
+- Updates propagate to 3D scene in real-time
 
-**`/utils/i18n.ts` - Translation Engine**
-- `t(key, language)` - Get translation with fallback
-- `loadLanguage(language)` - Async load language JSON
-- `preloadLanguage(language)` - Cache language for performance
-- `validateTranslations(language)` - Check for missing/extra keys
-- Translation caching to avoid repeated API calls
-
-**`/hooks/useI18n.ts` - React Hook**
-```typescript
-const { translated, language, isLoading, error } = useI18n("key");
-```
-- Listens for `languageChange` custom events
-- Loads translations asynchronously
-- Provides 3-level fallback (requested → English → formatted key)
-- Auto-formats key names: "hero.title" → "Hero Title"
-- Additional hooks: `useCurrentLanguage()`, `useTranslationValidation()`
-
-#### Translation Keys Structure
-Keys follow dot notation organized by section:
-- **Navigation:** `nav.*`
-- **Hero:** `hero.title`, `hero.subtitle`
-- **About:** `about.title`, `about.description.p1/p2`, `about.cta.*`, `about.techStack`
-- **Contact:** `contact.title`, `contact.form.*`, `contact.alternate`, `contact.github`
-- **Footer:** `footer.*`
-- **Projects:** `projects.title`, `projects.description`
-
-#### JSON File Format (e.g., `/public/locales/en.json`)
-```json
-{
-  "hero.title": "SIMON TINGLE",
-  "hero.subtitle": "Building interactive experiences with code",
-  "about.title": "About Me",
-  "about.description.p1": "I'm a creative developer...",
-  ...
-}
-```
-
-#### Language Switching Flow
-1. User clicks language flag in Navigation dropdown
-2. Dispatcher fires `languageChange` custom event
-3. `useI18n` hook detects event → updates language state
-4. Fetches translations for new language
-5. Components re-render with new text
-6. Preference saved to localStorage
-
-#### Validation & Updates
-- Run `npm run validate-translations` to check for missing keys
-- **Console warnings** appear during dev if key is missing
-- **Fallback display:** Formatted key name shown if translation fails
-- **To add new content:** Add key to all 8 JSON files in `/public/locales/`
+### Component-Level State
+- **Hero3D**: `windStrength` state (also synced with config panel)
+- **Navigation**: `isOpen` (mobile menu), `langOpen` (language dropdown), `currentLang`
+- **FlipClock**: `time` (hours, minutes, day, date)
 
 ---
 
-### 2. 3D Terrain Visualization System
+## Performance Optimizations
 
-#### Component: `ProceduralTerrainScene.tsx`
-
-**Purpose:** Renders animated 3D procedural terrain as fixed background
-
-**Key Parameters:**
-- **Heightmap:** 1024×1024 pixels, procedurally generated
-- **World Size:** 40,000 units
-- **Elevation Scale:** 35 (raw height values × 35)
-- **Water Level:** 500 units
-- **Camera Position:** [0, 3000, 5000]
-- **Camera Near/Far:** 10 / 50000
-
-**Features:**
-- Flat-shaded terrain with muted green color (#558833)
-- Procedural water with wave simulation
-- Trees: Fir and deciduous with trunks (InstancedMesh)
-- Day/night cycle with animated sky
-- Moon and sun lighting
-- Exponential fog for atmospheric effect (FogExp2)
-- Interactive scene config panel
-
-**Important Code Locations:**
-- Geometry generation: Heightmap to vertices
-- Water shader: Custom GLSL shader for displacement & color
-- Tree placement: Shore buffer & elevation-based distribution
-- Lighting: Sun/moon directional lights with animated intensity
+1. **LOD System**: Geometry resolution decreases with distance
+2. **InstancedMesh**: Trees rendered efficiently with single draw call
+3. **useMemo**: Terrain geometries cached and reused
+4. **Framer Motion**: GPU-accelerated animations
+5. **Next.js Image Optimization**: Automatic image optimization
+6. **Code Splitting**: Components lazy-loaded as needed
 
 ---
 
-### 3. Responsive Layout System
+## Recent Changes Summary (This Session)
 
-#### Main Page Structure (`/app/page.tsx`)
-
-```
-Hero Section (92vh)
-  ├── Title & Subtitle (with i18n)
-  ├── Animated scroll indicator
-  └── Fixed background: ProceduralTerrainScene
-
-About Section (#about)
-  ├── About Me title (with white glow)
-  ├── Description paragraphs
-  ├── CTA buttons (Get in Touch, GitHub)
-  └── Tech Stack (2-column grid)
-      ├── All 11 skills with white glow header
-      └── Positioned 80px higher (-marginTop)
-
-Projects Section (#projects)
-  ├── Project cards
-  └── Live demo links
-
-Contact Section (#contact)
-  ├── Contact form
-  ├── Email input
-  ├── Message textarea
-  └── Social links (Email, GitHub, LinkedIn)
-
-Footer
-  └── Links & copyright
-```
-
-#### Grid Layout (About & Tech Stack)
-```
-Grid: md:grid-cols-2 gap-12 items-start
-├── Column 1 (Left)
-│   ├── About Me text
-│   ├── Buttons
-│   └── etc.
-└── Column 2 (Right)
-    ├── Tech Stack title (h3 with glow)
-    └── 2-column skill grid
-```
-
-**Alignment Details:**
-- Grid uses `items-start` (both columns align to top)
-- Tech Stack has `self-start` class
-- Tech Stack has `marginTop: -80px` to position higher
-- All components respond to `md:` breakpoint
+| Feature | File | Change |
+|---------|------|--------|
+| LOD Terrain | Hero3D.tsx | Added 4-level geometry LOD system |
+| Trees | Hero3D.tsx | Added instanced trees with trunks |
+| Wind Effect | Hero3D.tsx | Implemented wind animation (0-50 units) |
+| Wind Control | SceneConfigPanel.tsx | Added wind strength slider to Vegetation section |
+| Text Glow | app/page.tsx | Added subtle black glow to hero text |
+| Text Glow | About.tsx | Increased Tech Stack text brightness |
+| Input Fix | SceneConfigPanel.tsx | Fixed controlled/uncontrolled input warning |
 
 ---
 
-## Components & Pages
+## Future Enhancements
 
-### Layout Components
-
-#### 1. **Navigation** (`/components/Navigation.tsx`)
-- Header with ST logo (links home)
-- Menu links: Home, Projects, Blog, Contact
-- **Language Selector Dropdown:**
-  - Shows 8 languages with flags
-  - Desktop: Dropdown menu
-  - Mobile: Language buttons in sidebar menu
-  - Dispatches `languageChange` custom event on selection
-  - Saves preference to localStorage via `setUserLanguage()`
-
-#### 2. **Footer** (`/components/Footer.tsx`)
-- Copyright & credits
-- Navigation links (repeated)
-- Social links (GitHub, LinkedIn, Twitter, Email)
-- Uses i18n for translated content
-
-### Page Sections
-
-#### 1. **Hero Section** (`/app/page.tsx`)
-- Full height: 92vh
-- Title: "SIMON TINGLE"
-- Subtitle: "Building interactive experiences with code"
-- Both use `useI18n()` hook
-- Animated scroll indicator (chevron + gradient)
-- Fixed background: ProceduralTerrainScene
-
-#### 2. **About Section** (`/components/About.tsx`)
-
-**Layout:**
-- Max width: 4xl
-- Title: "About Me" (h2 with white glow)
-- 2-column grid:
-  - **Left:** Description text + CTA buttons
-  - **Right:** Tech Stack
-
-**Tech Stack Grid:**
-- Heading: "Tech Stack" (h3 with white glow)
-- 2×6 grid (11 items, last row has 1 item)
-- Current skills:
-  1. React
-  2. TypeScript
-  3. Next.js
-  4. Three.js
-  5. Web Audio API
-  6. Node.js
-  7. TailwindCSS
-  8. Framer Motion
-  9. Terraform
-  10. AWS Cloud
-  11. Python
-
-**White Glow Effects:**
-- "About Me": `textShadow: '0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3)'`
-- "Tech Stack": Same shadow effect
-
-**Positioning:**
-- Tech Stack positioned `-80px` higher via `marginTop: '-80px'`
-- Both columns align to start (`items-start`)
-
-**Styling:**
-- Tech Stack items: Blue background, dark mode support
-- Text: Responsive typography (text-2xl for h3, text-lg for body)
-
-#### 3. **Projects Section** (`/components/ProjectShowcase.tsx`)
-- Title: "Selected Projects"
-- Subtitle describing project collection
-- Project cards (3 featured projects)
-- Each card has:
-  - Project image
-  - Title
-  - Description
-  - Tech stack tags
-  - Live demo link
-
-**Featured Projects:**
-1. **DJ Tingle** - Web-based digital audio workstation
-   - Stack: React, Web Audio API, TypeScript, Tailwind CSS
-   - URL: djtingle-0326-production.up.railway.app
-
-2. **Street Driver Radio Edition** - 3D driving game
-   - Stack: React, Three.js, TypeScript, Socket.io, Prisma, PostgreSQL, Tailwind CSS, Vite
-   - URL: street-driver-radio-edition-production.up.railway.app
-
-3. **Live Fuel Tracker** - Energy monitoring dashboard
-   - Stack: Next.js 15, TypeScript, Tailwind CSS, EIA API, OWID CSV, World Bank API, Nitter RSS, MARAD
-   - URL: international-energy-production.up.railway.app
-
-#### 4. **Contact Section** (`/components/Contact.tsx`)
-- Title: "Let's Work Together"
-- Subtitle: "Have an idea for a project? I'd love to hear about it."
-- **Contact Form:**
-  - Email input (required)
-  - Message textarea (required)
-  - Submit button (calls `handleSubmit`)
-- **Alternative Contact Methods:**
-  - Email: hello@simontingle.com
-  - GitHub: github.com/SimonTingle
-  - LinkedIn: linkedin.com
-- Success message displays for 5 seconds after submission
-- All text uses i18n hooks
+- [ ] Birds flocking system
+- [ ] ProceduralTerrainScene full implementation
+- [ ] Water shader improvements
+- [ ] Mobile-optimized 3D rendering
+- [ ] Blog section with articles
+- [ ] Project filtering/search
+- [ ] Dark mode toggle (currently dark)
+- [ ] Performance metrics dashboard
 
 ---
 
-## Styling & Design
+## How to Extend
 
-### Color Scheme
-- **Primary:** Slate/Gray with dark backgrounds
-- **Accent:** Blue (#0066cc / blue-600)
-- **Text:** 
-  - Light mode: Gray-900
-  - Dark mode: White
-- **Borders:** Slate-700/50
+### Adding a New Config Option
+1. Add property to `SceneConfig` interface in `SceneConfigPanel.tsx`
+2. Add to `defaultConfig` object
+3. Add UI control (Slider, Toggle, Pills, etc.) in appropriate Section
+4. Pass to scene component via props
 
-### Tailwind CSS Classes Used
-- **Typography:**
-  - `text-4xl md:text-5xl` - Main headings
-  - `text-2xl` - Section headings
-  - `text-lg` - Body text
-  - `font-bold` - Emphasis
+### Adding a New Component Section
+1. Create component in `components/`
+2. Import in `app/page.tsx`
+3. Wrap with appropriate z-index and pointer-events
+4. Add section ID for navigation links
 
-- **Colors:**
-  - `bg-slate-900/75` - Sections
-  - `bg-blue-600 hover:bg-blue-700` - Buttons
-  - `dark:text-white` - Dark mode text
-  - `dark:border-gray-600` - Dark mode borders
-
-- **Layout:**
-  - `grid md:grid-cols-2` - 2-column on medium+ screens
-  - `gap-12` - Column spacing
-  - `items-start` - Align to top
-  - `max-w-4xl mx-auto` - Content constraint
-  - `flex justify-center` - Horizontal centering
-
-- **Effects:**
-  - `backdrop-blur-md` - Frosted glass effect
-  - `border-t border-slate-700/50` - Top border
-  - `transition-colors` - Smooth hover effects
-  - `rounded-lg` - Border radius
-
-### Custom Animations
-
-**Framer Motion animations used throughout:**
-- Entry animations: `opacity: 0 → 1`, `y: 20 → 0`
-- Staggered delays for sequential reveals
-- `viewport={{ once: true }}` - Animation plays once when in view
-- Sidebar animations (mobile menu)
-
-**Custom CSS animations (in components):**
-- Scroll indicator chevron: `animate-bounce`
-- Glow effects: text-shadow with white RGBA
-- Background gradients: Fade-out effects
+### Modifying Terrain
+- **LOD distances**: Edit `lodRef.current.addLevel()` calls in Hero3D.tsx
+- **Terrain function**: Modify `generateTerrainGeometry()` in Hero3D.tsx
+- **Tree placement**: Edit `treePositions` useMemo in Trees component
 
 ---
 
-## Key Implementation Details
+## Styling Conventions
 
-### Recent Changes & Current State
-
-#### 1. I18n System Fix (Critical)
-- **Issue:** useI18n hook was returning `translation` property but components expected `translated`
-- **Fix:** Changed hook return to use `translated` property name
-- **Impact:** All page text now displays properly in all languages
-
-#### 2. Language Switching
-- **Status:** Fully functional ✅
-- All 8 languages can be selected
-- Text updates instantly
-- Flag in header updates to match language
-- Preference persists via localStorage
-
-#### 3. About Section Alignment
-- **Issue:** Tech Stack was vertically centered, not aligned to top
-- **Fix 1:** Changed grid from `items-center` to `items-start`
-- **Fix 2:** Added `self-start` class to Tech Stack div
-- **Fix 3:** Added `marginTop: '-80px'` to position higher
-- **Result:** Tech Stack now properly aligned with About Me text
-
-#### 4. White Glow Effects
-- **"About Me" heading:** `textShadow: '0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3)'`
-- **"Tech Stack" heading:** Identical glow effect
-- **Effect:** Subtle luminous quality behind text
-
-#### 5. Tech Stack Updates
-- **Added items:**
-  - Terraform (infrastructure as code)
-  - AWS Cloud (cloud services)
-  - Python (programming language)
-- **Total:** 11 skills now displayed
-
-#### 6. Flag Changes
-- **English flag:** Changed from 🇺🇸 (USA) to 🇬🇧 (UK)
-- **Location:** `/utils/translate.ts` line 9
+- **Tailwind CSS**: Primary styling method
+- **Inline styles**: Used for dynamic values and complex animations
+- **CSS-in-JS**: Used in component files for global animations (@keyframes)
+- **Dark theme**: Primary theme (slate-900, slate-950 backgrounds)
+- **Color palette**: Blues, whites, and earth tones
 
 ---
 
-## Build & Deployment
+## UI Positioning & Styling Details
 
-### Development
-```bash
-npm run dev
-# Runs Next.js dev server on port 3000
-# Auto-reloads on file changes
-# TypeScript compilation happens automatically
-```
+### Header & Navigation (Navigation.tsx)
+**Container**: `fixed top-0 w-full z-50 bg-gradient-to-b from-slate-900/80 to-transparent backdrop-blur-sm`
 
-### Build
-```bash
-npm run build
-# Creates optimized production build
-# Compiles TypeScript
-# Bundles assets
-```
+#### Flip Clock Positioning
+- **Location**: Upper-left corner
+- **Position**: `absolute` with `top: calc(1rem + 10px)` and `left: calc(1rem + 40px)`
+- **Scaling**: `transform: scale(1.5)` with `transformOrigin: 'top-left'`
+- **Opacity**: `0.5` (50% transparent)
+- **Responsive**: Hidden on mobile (`hidden md:block`)
+- **File**: `components/FlipClock.tsx`
+- **Styles**:
+  ```css
+  .flip-digit {
+    width: 1.25rem;
+    height: 1rem;
+    background: linear-gradient(to bottom, #1f2937 0%, #111827 100%);
+    color: #ffffff;
+    font-size: 0.75rem;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    border: 1px solid #374151;
+    border-radius: 0.25rem;
+  }
+  ```
+- **Time Update**: `setInterval(updateTime, 1000)` - updates every second
+- **Format**: `HH:MM` with `DAY DATE` below
 
-### Scripts
-- `npm run validate-translations` - Check i18n completeness
+#### Logo (ST)
+- **Position**: Relative within flex container
+- **Styling**: `text-2xl font-bold text-white`
+- **Margin**: `marginLeft: '40px'` (moved 40px right from default)
+- **Link**: `href="/"`
 
-### Environment
-- **Node version:** Check package.json
-- **Package manager:** npm (or yarn/pnpm/bun)
-- **Next.js version:** 15
-- **React version:** 19
+#### Language Selector
+- **Position**: Top-right corner of navigation
+- **Button Style**: Flex layout with flag emoji and language name
+- **Active State**: `bg-blue-600 text-white`
+- **Inactive State**: `text-gray-300 hover:bg-slate-700`
+- **Dropdown**: Animated with Framer Motion (`initial={{ opacity: 0, y: -10 }}`)
+- **Z-Index**: `z-50`
 
----
+### Hero Section (app/page.tsx)
+**Container**: `relative h-[92vh] flex items-center justify-center pointer-events-none`
 
-## Important Notes for Future AI
+#### Hero Title (H1)
+- **Text**: `text-6xl md:text-8xl font-bold text-white tracking-wider`
+- **Text-Shadow** (soft black glow):
+  ```javascript
+  textShadow: '0 0 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.15)'
+  ```
+- **Effect**: Two-layer shadow creating subtle depth highlight
+- **Z-Index**: Relative positioning above 3D background
 
-### Critical File Locations
-- **Main page:** `/app/page.tsx` (Hero + all sections)
-- **Components:** `/components/` (About, Contact, Navigation, etc.)
-- **Styles:** Tailwind in className attributes + inline styles
-- **Translations:** `/public/locales/*.json` (add to all 8 files)
-- **Hooks:** `/hooks/useI18n.ts` (always use for text)
+#### Subtitle (P)
+- **Text**: `text-lg md:text-xl text-orange-100/90 tracking-wide mt-4`
+- **Text-Shadow** (same as title):
+  ```javascript
+  textShadow: '0 0 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.15)'
+  ```
+- **Color**: `text-orange-100/90` (warm orange with slight transparency)
 
-### Common Tasks
+#### Scroll Indicator
+- **Position**: `absolute bottom-0 left-1/2 -translate-x-1/2`
+- **Animation**: `animate-bounce` (Tailwind)
+- **Content**: Chevron SVG icon
+- **Color**: `text-white/40 hover:text-white/60`
+- **Padding**: `pb-6`
 
-**Adding new text content:**
-1. Add key to all 8 JSON files in `/public/locales/`
-2. Use `useI18n("key")` hook in component
-3. Access with `.translated` property
-4. Run `validate-translations.js` to verify
+### About Section (About.tsx)
+**Container**: `py-20 px-4 md:px-8 lg:px-16 bg-slate-900/75 backdrop-blur-md border-t border-slate-700/50`
 
-**Changing layout:**
-- Modify grid/flexbox classes in component
-- Use `md:` breakpoint for responsive behavior
-- Update `/components/About.tsx` for section layout
-
-**Adding white glow to text:**
-```jsx
-<h2 style={{
+#### Section Title (H2)
+- **Text**: `text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-8`
+- **Text-Shadow**:
+  ```javascript
   textShadow: '0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3)'
-}}>
-  Your text here
-</h2>
-```
+  ```
+- **Effect**: White glow highlight on dark background
 
-**Moving elements vertically:**
-- Use `style={{ marginTop: 'Xpx' }}` for negative margins
-- Or use Tailwind `mt-X` / `-mt-X` classes
+#### Description Text
+- **Text**: `text-lg text-gray-600 dark:text-gray-100 mb-4` and `mb-6`
+- **Color**: `dark:text-gray-100` (very light gray in dark mode)
+- **Brightness**: Increased from default gray-700 for better contrast
 
-### Grid System Reference
-- `grid md:grid-cols-2` - 2 columns on medium+ screens
-- `gap-12` - 48px gap between columns
-- `items-start` - Align all items to top
-- `self-start` - Align individual item to top
+#### Tech Stack Title (H3)
+- **Text**: `text-2xl font-bold text-gray-900 dark:text-white mb-6`
+- **Text-Shadow** (brightest):
+  ```javascript
+  textShadow: '0 0 20px rgba(255, 255, 255, 0.73), 0 0 40px rgba(255, 255, 255, 0.36)'
+  ```
+- **Effect**: Enhanced white glow for emphasis
+- **Margin**: `marginTop: '-80px'` (overlaps with left column)
 
-### Color Classes Reference
-- `text-gray-900 dark:text-white` - Responsive text color
-- `bg-slate-900/75` - Slate background with 75% opacity
-- `border-slate-700/50` - Border with transparency
-- `bg-blue-100 dark:bg-blue-900/30` - Light/dark variant
+#### Tech Stack Grid
+- **Grid**: `grid grid-cols-2 gap-3`
+- **Item Styling**: `px-4 py-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg`
+- **Text**: `text-gray-900 dark:text-blue-200 font-semibold text-center`
+
+#### CTA Buttons
+**Get in Touch Button**:
+- **Style**: `px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors`
+- **Link**: `href="#contact"`
+
+**GitHub Button**:
+- **Style**: `px-6 py-3 border-2 border-gray-400 dark:border-gray-500 text-white hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold rounded-lg transition-colors`
+- **CSS Class**: `github-button-glow` with animation
+- **Animation**:
+  ```css
+  @keyframes textGlow {
+    0%, 100% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); }
+    50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.5); }
+  }
+  ```
+- **Hover Effect**: Color changes to `#9ca3af` with `textGlowGray` animation
+- **Link**: `href="https://github.com/SimonTingle"` with `target="_blank" rel="noopener noreferrer"`
+
+**LinkedIn Button**:
+- **Style**: `px-8 py-2 border-2 rounded transition-colors linkedin-button flex items-center justify-center font-bold text-white`
+- **CSS**: 
+  ```css
+  .linkedin-button {
+    background-color: #0A66C2;
+    border-color: #0A66C2;
+  }
+  .linkedin-button:hover {
+    background-color: #084B93;
+    border-color: #084B93;
+  }
+  ```
+- **Link**: `href="https://www.linkedin.com/in/simontingle/"` with `target="_blank" rel="noopener noreferrer"`
+
+### Scene Configuration Panel (SceneConfigPanel.tsx)
+**Container**: `fixed top-4 right-4 z-50 flex flex-col items-end gap-3 pointer-events-auto`
+
+#### Panel
+- **Panel Style**: `w-80 bg-slate-950/92 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-[0_8px_60px_rgba(0,0,0,0.8)]`
+- **Position**: Slides in from right with Framer Motion
+- **Max Height**: `max-h-[85vh] overflow-y-auto`
+
+#### Toggle Button (Gear Icon)
+- **Size**: `w-11 h-11`
+- **Style**: `rounded-full flex items-center justify-center shadow-lg border transition-colors`
+- **Closed**: `bg-slate-950/80 backdrop-blur-md border-slate-700/60 text-slate-400 hover:text-white`
+- **Open**: `bg-blue-600 border-blue-400 text-white`
+- **Animation**: Icon rotates 60° when open
+
+#### Slider Control
+- **Style**: `w-full h-1.5 rounded-full appearance-none cursor-pointer accent-blue-500`
+- **Value Display**: Label shows formatted value (e.g., "Wind Strength: 50%")
+- **Range**: Min/max values specified per control
+
+### 3D Canvas Elements (Hero3D.tsx)
+**Canvas Container**: `absolute inset-0`
+- **Camera**: `position: [0, 8, 15], fov: 50`
+- **DPR**: `[1, 1.5]` (device pixel ratio)
+- **Antialiasing**: `false` (performance optimization)
 
 ---
 
-## Conclusion
+## Browser Support
 
-This portfolio is built with:
-- **Modern React & TypeScript** for type safety
-- **Next.js App Router** for file-based routing
-- **Tailwind CSS** for responsive styling
-- **Framer Motion** for smooth animations
-- **Three.js** for immersive 3D graphics
-- **Custom i18n system** for 8-language support
-- **Responsive design** that works on all devices
+- Chrome/Edge: Full support (including WebGL)
+- Firefox: Full support
+- Safari: Full support (may require polyfills for newer CSS)
+- Mobile: Responsive design, optimized for touch
 
-All text content uses the i18n system, making it easy to update text in any language. The layout is highly customizable through Tailwind classes and inline styles. The 3D background adds visual interest while the structured component hierarchy keeps the code maintainable.
+---
 
-For any future modifications, refer to this document and the specific component files for implementation details.
+*Last updated: April 2026*

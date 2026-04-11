@@ -39,6 +39,7 @@ export interface SceneConfig {
   showFirTrees: boolean;
   showDeciduousTrees: boolean;
   showTrunks: boolean;
+  windStrength: number;        // 0–1 tree wind effect intensity
 
   // ── Birds ────────────────────────────────────────────────────────────────
   birdScale: number;           // 0.3–3×
@@ -80,6 +81,7 @@ export const defaultConfig: SceneConfig = {
   showFirTrees: true,
   showDeciduousTrees: true,
   showTrunks: true,
+  windStrength: 0.5,
 
   birdScale: 1,
   birdSpeed: 1,
@@ -126,9 +128,9 @@ function Slider({
   onChange: (v: number) => void;
 }) {
   return (
-    <Row label={label} value={fmt(value)}>
+    <Row label={label} value={fmt(value ?? 0)}>
       <input
-        type="range" min={min} max={max} step={step} value={value}
+        type="range" min={min} max={max} step={step} value={value ?? 0}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-blue-500 pointer-events-auto"
       />
@@ -420,6 +422,10 @@ export function SceneConfigPanel({ config, onChange, onReset }: Props) {
                 </div>
                 <Toggle label="Show trunks" value={config.showTrunks}
                   onChange={(v) => onChange({ showTrunks: v })}
+                />
+                <Slider label="Wind strength" value={config.windStrength}
+                  min={0} max={1} step={0.05} fmt={(v) => `${(v * 100).toFixed(0)}%`}
+                  onChange={(v) => onChange({ windStrength: v })}
                 />
               </Section>
 

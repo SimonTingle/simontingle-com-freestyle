@@ -132,7 +132,7 @@ export function About() {
               <h3
                 className="text-2xl font-bold text-gray-900 dark:text-white mb-6"
                 style={{
-                  textShadow: '0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3)'
+                  textShadow: '0 0 20px rgba(255, 255, 255, 0.73), 0 0 40px rgba(255, 255, 255, 0.36)'
                 }}
               >
                 {techStackTitle.translated}
