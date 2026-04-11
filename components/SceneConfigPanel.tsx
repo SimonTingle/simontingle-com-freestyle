@@ -62,8 +62,8 @@ export const defaultConfig: SceneConfig = {
   dayNightSpeed: 1,
   manualTimeEnabled: false,
   manualTimeHour: 12,
-  sunIntensity: 3.5,
-  moonIntensity: 0.8,
+  sunIntensity: 6,
+  moonIntensity: 2,
 
   fogDensity: 0.00015,
   envPreset: "sunset",
