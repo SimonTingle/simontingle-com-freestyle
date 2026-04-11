@@ -1,10 +1,18 @@
 "use client";
 
 import React, { useRef, useMemo, useEffect, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, extend } from "@react-three/fiber";
 import { OrbitControls, Plane } from "@react-three/drei";
 import { Mesh, BufferGeometry, BufferAttribute, LOD, InstancedMesh, ConeGeometry, CylinderGeometry, MeshStandardMaterial, Object3D } from "three";
 import { motion } from "framer-motion";
+
+extend({ lod: LOD });
+
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    lod: { ref?: React.Ref<LOD>; children?: React.ReactNode };
+  }
+}
 
 interface WindContextType {
   windStrength: number;
