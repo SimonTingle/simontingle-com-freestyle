@@ -3,7 +3,7 @@
 import React, { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Plane } from "@react-three/drei";
-import { Mesh, BufferGeometry, BufferAttribute, LOD, InstancedMesh, ConeGeometry, CylinderGeometry, MeshStandardMaterial, Matrix4, Vector3 } from "three";
+import { Mesh, BufferGeometry, BufferAttribute, LOD, InstancedMesh, ConeGeometry, CylinderGeometry, MeshStandardMaterial, Object3D } from "three";
 import { motion } from "framer-motion";
 
 interface WindContextType {
@@ -39,20 +39,20 @@ function Trees({ windStrength = 0.5 }) {
 
   useEffect(() => {
     if (treesRef.current && trunkRef.current) {
-      const dummy = new Matrix4();
+      const dummy = new Object3D();
 
       treePositions.forEach((pos, i) => {
         // Foliage (cone)
-        dummy.identity();
-        dummy.translate(pos.x, 2 + pos.scale, pos.z);
-        dummy.scale(new Vector3(pos.scale, pos.scale * 1.2, pos.scale));
-        treesRef.current?.setMatrixAt(i, dummy);
+        dummy.position.set(pos.x, 2 + pos.scale, pos.z);
+        dummy.scale.set(pos.scale, pos.scale * 1.2, pos.scale);
+        dummy.updateMatrix();
+        treesRef.current?.setMatrixAt(i, dummy.matrix);
 
         // Trunk (cylinder)
-        dummy.identity();
-        dummy.translate(pos.x, 0.8, pos.z);
-        dummy.scale(new Vector3(pos.scale * 0.3, 1.5, pos.scale * 0.3));
-        trunkRef.current?.setMatrixAt(i, dummy);
+        dummy.position.set(pos.x, 0.8, pos.z);
+        dummy.scale.set(pos.scale * 0.3, 1.5, pos.scale * 0.3);
+        dummy.updateMatrix();
+        trunkRef.current?.setMatrixAt(i, dummy.matrix);
       });
 
       treesRef.current.instanceMatrix.needsUpdate = true;
@@ -62,7 +62,7 @@ function Trees({ windStrength = 0.5 }) {
 
   useFrame(({ clock, camera }) => {
     if (treesRef.current) {
-      const dummy = new Matrix4();
+      const dummy = new Object3D();
       const time = clock.getElapsedTime();
       const cameraPos = camera.position;
 
@@ -83,10 +83,10 @@ function Trees({ windStrength = 0.5 }) {
           zPos += tiltOffset * 0.3;
         }
 
-        dummy.identity();
-        dummy.translate(xPos, 2 + pos.scale, zPos);
-        dummy.scale(new Vector3(pos.scale, pos.scale * 1.2, pos.scale));
-        treesRef.current?.setMatrixAt(i, dummy);
+        dummy.position.set(xPos, 2 + pos.scale, zPos);
+        dummy.scale.set(pos.scale, pos.scale * 1.2, pos.scale);
+        dummy.updateMatrix();
+        treesRef.current?.setMatrixAt(i, dummy.matrix);
       });
 
       treesRef.current.instanceMatrix.needsUpdate = true;
