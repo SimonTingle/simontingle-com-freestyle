@@ -122,8 +122,7 @@ export function About() {
 
             {/* Skills */}
             <motion.div
-              className="self-start"
-              style={{ marginTop: '-80px' }}
+              className="self-start md:-mt-20"
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
