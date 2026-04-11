@@ -41,9 +41,14 @@ export function Navigation() {
 
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="text-2xl font-bold text-white" style={{ marginLeft: '40px' }}>
+        <Link href="/" className="text-2xl font-bold text-white md:ml-10">
           ST
         </Link>
+
+        {/* Flip Clock - mobile inline */}
+        <div className="md:hidden">
+          <FlipClock scale={1.0} transformOrigin="center" />
+        </div>
 
         {/* Desktop Navigation + Language Selector */}
         <div className="hidden md:flex gap-6 items-center ml-auto">

@@ -62,7 +62,7 @@ const flipClockStyles = `
   }
 `;
 
-export function FlipClock() {
+export function FlipClock({ scale = 1.5, transformOrigin = 'top-left' }: { scale?: number; transformOrigin?: string }) {
   const [time, setTime] = useState({ hours: "00", minutes: "00", day: "MON", date: "01 JAN" });
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export function FlipClock() {
   return (
     <>
       <style>{flipClockStyles}</style>
-      <div className="flip-clock flex items-center gap-2 text-white" style={{ transform: 'scale(1.5)', transformOrigin: 'top-left', opacity: 0.5 }}>
+      <div className="flip-clock flex items-center gap-2 text-white" style={{ transform: `scale(${scale})`, transformOrigin, opacity: 0.5 }}>
         <div className="flex items-center gap-0.5">
           <div className="flip-digit">{time.hours[0]}</div>
           <div className="flip-digit">{time.hours[1]}</div>
